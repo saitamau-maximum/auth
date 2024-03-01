@@ -1,0 +1,14 @@
+{
+  "name": "@saitamau-maximum/auth",
+  "version": "1.0.0",
+  "description": "Implementation of the authentication system for Maximum",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.1.0"
+  }
+}
