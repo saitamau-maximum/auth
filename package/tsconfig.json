@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "CommonJS",
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -25,10 +28,14 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "skipLibCheck": false,
-    "types": ["node"],
+    "types": [
+      "@cloudflare/workers-types"
+    ],
     "rootDir": "./src",
     "outDir": "./dist",
     "moduleResolution": "node"
   },
-  "include": ["./src/**/*"]
+  "include": [
+    "./src/**/*"
+  ]
 }
