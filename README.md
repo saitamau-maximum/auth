@@ -20,10 +20,13 @@ Maximum の統合認証プラットフォーム
 `@saitamau-maximum/auth` をインストール。
 
 > [!NOTE]
-> GitHub Packages でホストしているため、認証が必要。
+> GitHub Packages でホストしているため、インストール時には認証が必要。
 > 詳しくは [公式ドキュメント](https://docs.github.com/ja/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages) を参照。
 
 ### 認証
+
+> [!WARNING]
+> `/auth` 以下のパスは使えなくなります。ご注意ください。
 
 #### Cloudflare Pages でホストしているサイト (pages.dev でアクセスできるサイト)
 
@@ -33,34 +36,11 @@ Cloudflare Pages Functions を使う。
 > [!TIP]
 > 例えば Next.js や Remix なら `public/functions/_middleware.js` に書く。
 
+なお、 export されている `middleware` は Cloudflare Workers, Cloudflare Pages Function (or それらと互換性のあるもの) で使うことを想定しています。
+それ以外の環境では使えない可能性があります。
+
 ```javascript
-import { isAuthenticated, getLoginURL, getHeadersToSet } from '@saitamau-maximum/auth';
-
-const authMiddleware = (context) => {
-  // ヘッダを渡して認証する
-  const isAuthenticated = await isAuthenticated(context.headers);
-
-  // 認証されていない場合はリダイレクト
-  if (!isAuthenticated) {
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: getLoginURL(),
-      }
-    })
-  }
-
-  // 認証以降の処理に進み、その応答を受け取る
-  const response = await context.next();
-
-  // 必要な応答ヘッダをセットする
-  const headers = getHeadersToSet(context.headers);
-  for (const [key, value] of Object.entries(headers)) {
-    response.headers.set(key, value);
-  }
-
-  return response;
-};
+import { middleware as authMiddleware } from '@saitamau-maximum/auth';
 
 // もしほかにも Middleware を使いたい場合
 const myMiddleware = (context) => {
