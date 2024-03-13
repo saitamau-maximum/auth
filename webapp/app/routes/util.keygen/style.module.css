@@ -1,0 +1,10 @@
+.pre {
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 1em;
+  padding: 1em;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  user-select: all;
+}
