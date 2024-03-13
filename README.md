@@ -25,8 +25,7 @@ Maximum の統合認証プラットフォーム
 
 ### 認証
 
-> [!WARNING]
-> `/auth` 以下のパスは使えなくなります。ご注意ください。
+> [!WARNING] > `/auth` 以下のパスは使えなくなります。ご注意ください。
 
 #### Cloudflare Pages でホストしているサイト (pages.dev でアクセスできるサイト)
 
@@ -40,16 +39,16 @@ Cloudflare Pages Functions を使う。
 それ以外の環境では使えない可能性があります。
 
 ```javascript
-import { middleware as authMiddleware } from '@saitamau-maximum/auth';
+import { middleware as authMiddleware } from '@saitamau-maximum/auth'
 
 // もしほかにも Middleware を使いたい場合
-const myMiddleware = (context) => {
+const myMiddleware = context => {
   // 何かしらの処理
   // ...
-  return context.next();
-};
+  return context.next()
+}
 
-export const onRequest = [authMiddleware, myMiddleware];
+export const onRequest = [authMiddleware, myMiddleware]
 ```
 
 #### それ以外のサイト
@@ -59,34 +58,34 @@ Reverse Proxy でリクエストを受け付けたら、正しいリクエスト
 なお、ログインしていない場合には、 Proxy 側でリダイレクトされるので気にしなくていい。
 
 ```javascript
-import { validateRequest } from '@saitamau-maximum/auth';
+import { validateRequest } from '@saitamau-maximum/auth'
 
 // 何らかの処理
 // ...
-const validation = validateRequest(request.headers);
+const validation = validateRequest(request.headers)
 if (!validation) {
   // 正しくないリクエスト
   return new Response(null, {
     status: 403,
-  });
+  })
 }
 ```
 
 ### ユーザー情報の取得
 
 ```javascript
-import { getUserInfo } from '@saitamau-maximum/auth';
+import { getUserInfo } from '@saitamau-maximum/auth'
 
 // ユーザー情報を取得
 // 認証されていなければ null が返るので、これを実行する前に認証されているかチェックすべき
-const user = getUserInfo(context.headers);
+const user = getUserInfo(context.headers)
 ```
 
 ### ログアウト
 
 ```javascript
-import { getLogoutURL } from '@saitamau-maximum/auth';
+import { getLogoutURL } from '@saitamau-maximum/auth'
 
 // この URL に 302 リダイレクトさせる
-const logoutURL = getLogoutURL();
+const logoutURL = getLogoutURL()
 ```

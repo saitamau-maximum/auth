@@ -93,17 +93,17 @@ const decrypt = async (data: BufferSource, key: CryptoKey, iv: string) => {
 }
 
 export {
-  keypairGenAlgorithm,
+  decrypt,
+  encrypt,
+  exportKey,
   generateKeyPair,
   generateSymmetricKey,
-  symmetricGenAlgorithm,
-  exportKey,
-  keypairUsage,
   importKey,
-  symmetricUsage,
+  keypairGenAlgorithm,
   keypairHashAlgorithm,
+  keypairUsage,
   sign,
+  symmetricGenAlgorithm,
+  symmetricUsage,
   verify,
-  encrypt,
-  decrypt,
 }

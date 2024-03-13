@@ -16,7 +16,7 @@ module.exports = {
             position: 'before',
           },
           {
-            pattern: '{next**,next/**}',
+            pattern: '@remix-run/**',
             group: 'external',
             position: 'before',
           },

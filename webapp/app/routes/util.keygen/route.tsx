@@ -1,5 +1,7 @@
+import type { MetaFunction } from '@remix-run/cloudflare'
+import { json } from '@remix-run/cloudflare'
 import { useLoaderData } from '@remix-run/react'
-import { json, MetaFunction } from '@remix-run/cloudflare'
+
 import {
   exportKey,
   generateKeyPair,
@@ -8,19 +10,19 @@ import {
 
 import style from './style.module.css'
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: 'Key Generator - Maximum Auth' },
-    { name: 'robots', content: 'noindex, nofollow' },
-  ]
-}
-
 export const loader = async () => {
   const key = await generateKeyPair()
   const pubkey = await exportKey(key.publicKey)
   const privkey = await exportKey(key.privateKey)
   const symkey = await exportKey(await generateSymmetricKey())
   return json({ key: { pubkey, privkey, symkey } })
+}
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'Key Generator - Maximum Auth' },
+    { name: 'robots', content: 'noindex, nofollow' },
+  ]
 }
 
 export default function UtilKeygen() {

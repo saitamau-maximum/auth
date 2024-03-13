@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint . && prettier --check . && cd webapp && pnpm run lint && cd ..",
-    "fix": "eslint . --fix && prettier --write . && cd webapp && pnpm run fix && cd ..",
+    "fix": "eslint . --fix && prettier --write .",
     "prepare": "husky"
   },
   "devDependencies": {
