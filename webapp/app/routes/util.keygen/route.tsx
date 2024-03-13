@@ -1,5 +1,5 @@
 import { useLoaderData } from '@remix-run/react'
-import { json } from '@remix-run/cloudflare'
+import { json, MetaFunction } from '@remix-run/cloudflare'
 import {
   exportKey,
   generateKeyPair,
@@ -7,6 +7,13 @@ import {
 } from '../../../utils/keygen'
 
 import style from './style.module.css'
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'Key Generator - Maximum Auth' },
+    { name: 'robots', content: 'noindex, nofollow' },
+  ]
+}
 
 export const loader = async () => {
   const key = await generateKeyPair()

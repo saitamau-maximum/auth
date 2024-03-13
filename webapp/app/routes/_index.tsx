@@ -2,11 +2,15 @@ import type { MetaFunction } from '@remix-run/cloudflare'
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'New Remix App' },
-    { name: 'description', content: 'Welcome to Remix!' },
+    { title: 'Maximum Auth' },
+    { name: 'robots', content: 'noindex, nofollow' },
   ]
 }
 
 export default function Index() {
-  return <></>
+  return (
+    <>
+      <p>🚧 WIP</p>
+    </>
+  )
 }
