@@ -1,22 +1,10 @@
 import type { LoaderFunction, MetaFunction } from '@remix-run/cloudflare'
-import { isRouteErrorResponse, redirect, useRouteError } from '@remix-run/react'
+import { redirect } from '@remix-run/react'
 
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from 'octokit'
 
 import cookieSessionStorage from '../../utils/session.server'
-
-export function ErrorBoundary() {
-  const error = useRouteError()
-  if (isRouteErrorResponse(error)) {
-    return (
-      <>
-        <h1>Error!</h1>
-        <p>{error.data}</p>
-      </>
-    )
-  }
-}
 
 export const loader: LoaderFunction = async ({ context, request }) => {
   const envvar = context.cloudflare.env

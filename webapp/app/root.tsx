@@ -7,13 +7,48 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  isRouteErrorResponse,
+  useRouteError,
 } from '@remix-run/react'
 
 import './global.css'
 
-export const links: LinksFunction = () => [
-  ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
-]
+export function ErrorBoundary() {
+  const error = useRouteError()
+  if (isRouteErrorResponse(error)) {
+    return (
+      <html lang='ja'>
+        <head>
+          <meta charSet='utf-8' />
+          <meta name='viewport' content='width=device-width, initial-scale=1' />
+          <link rel='preconnect' href='https://fonts.googleapis.com' />
+          <link
+            rel='preconnect'
+            href='https://fonts.gstatic.com'
+            crossOrigin='anonymous'
+          />
+          <link
+            href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap'
+            rel='stylesheet'
+          />
+          <Meta />
+          <Links />
+        </head>
+        <body>
+          <main>
+            <h1>
+              {error.status} - {error.statusText}
+            </h1>
+            <p>{error.data}</p>
+          </main>
+          <ScrollRestoration />
+          <Scripts />
+          <LiveReload />
+        </body>
+      </html>
+    )
+  }
+}
 
 export default function App() {
   return (
@@ -31,7 +66,6 @@ export default function App() {
           href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap'
           rel='stylesheet'
         />
-
         <Meta />
         <Links />
       </head>
@@ -46,3 +80,7 @@ export default function App() {
     </html>
   )
 }
+
+export const links: LinksFunction = () => [
+  ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
+]
