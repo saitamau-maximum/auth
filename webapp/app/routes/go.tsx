@@ -54,6 +54,6 @@ export const meta: MetaFunction = () => {
 }
 
 export default function Go() {
-  // リダイレクト用
+  // リダイレクト用なので何も表示しない
   return null
 }

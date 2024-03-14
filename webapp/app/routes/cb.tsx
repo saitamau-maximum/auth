@@ -110,7 +110,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
 }
 
 export default function Callback() {
-  // リダイレクト用
+  // リダイレクト用なので何も表示しない
   return null
 }
 
