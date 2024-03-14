@@ -12,4 +12,10 @@ export default {
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // publicPath: "/build/",
+  // Octokit に必要っぽい？
+  serverNodeBuiltinsPolyfill: {
+    modules: {
+      os: true,
+    },
+  },
 }
