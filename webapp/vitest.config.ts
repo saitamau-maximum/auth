@@ -6,9 +6,6 @@ export default defineConfig({
       enabled: true,
       reporter: ['html'],
     },
-    api: {
-      port: 3000,
-    },
     environment: 'jsdom',
   },
 })
