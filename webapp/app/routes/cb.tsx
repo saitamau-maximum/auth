@@ -17,6 +17,10 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   const session = await getSession(request.headers.get('Cookie'))
 
   // ----- OAuth ----- //
+  if (!params.has('code') || !params.has('state')) {
+    throw new Response('invalid request', { status: 400 })
+  }
+
   if (params.get('state') !== session.get('state')) {
     throw new Response('state mismatch', {
       status: 400,

@@ -9,8 +9,8 @@ import handleProxy from './proxy'
 import handleRedirect from './redirect'
 import apiRouter from './router'
 
-const authDomain = 'https://auth.maximum.vc'
-// const authDomain = 'http://localhost:8788'
+// const authDomain = 'https://auth.maximum.vc'
+const authDomain = 'http://127.0.0.1:8788'
 
 // Export a default object containing event handlers
 export default {
@@ -30,6 +30,8 @@ export default {
     // ログインしてない場合はログインページに移動
     const loggedIn = false
     if (!loggedIn) {
+      const callbackUrl = `${url.origin}/auth/callback`
+
       const redirectData = await fetch(`${authDomain}/token`, {
         method: 'POST',
         headers: {
@@ -38,12 +40,14 @@ export default {
         body: JSON.stringify({
           name: authName,
           pubkey: await exportKey(publicKey),
+          callback: callbackUrl,
         }),
       }).then(res => res.json<{ token: string; iv: string }>())
 
       const param = await generateGoParam(
         authName,
         await exportKey(publicKey),
+        callbackUrl,
         atob(redirectData.token),
         atob(redirectData.iv),
         privateKey,

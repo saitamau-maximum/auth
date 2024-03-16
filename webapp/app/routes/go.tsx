@@ -18,11 +18,13 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   if (
     !params.has('name') ||
     !params.has('pubkey') ||
+    !params.has('callback') ||
     !params.has('token') ||
     !params.has('iv') ||
     !params.has('mac') ||
     params.getAll('name').length !== 1 ||
     params.getAll('pubkey').length !== 1 ||
+    params.getAll('callback').length !== 1 ||
     params.getAll('token').length !== 1 ||
     params.getAll('iv').length !== 1 ||
     params.getAll('mac').length !== 1
@@ -52,6 +54,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   const macVerifyResult = await verifyMac(
     params.get('name')!,
     params.get('pubkey')!,
+    params.get('callback')!,
     params.get('token')!,
     params.get('iv')!,
     params.get('mac')!,
@@ -63,6 +66,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   const [verifyResult, message] = await verifyToken(
     params.get('name')!,
     params.get('pubkey')!,
+    params.get('callback')!,
     key,
     params.get('token')!,
     params.get('iv')!,
@@ -73,6 +77,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   const { getSession, commitSession } = cookieSessionStorage(envvar)
 
   const session = await getSession(request.headers.get('Cookie'))
+  session.flash('continue_to', params.get('callback')!)
 
   if (session.has('id')) {
     return redirect('/continue', {
@@ -86,15 +91,14 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   // ref: https://docs.github.com/ja/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
   const oauthUrl = new URL('https://github.com/login/oauth/authorize')
   const oauthParams = new URLSearchParams()
-  oauthParams.append('client_id', envvar.GITHUB_OAUTH_ID)
-  oauthParams.append('redirect_uri', `${envvar.CF_PAGES_URL}/cb`)
-  oauthParams.append('scope', 'read:user')
+  oauthParams.set('client_id', envvar.GITHUB_OAUTH_ID)
+  oauthParams.set('redirect_uri', `${envvar.CF_PAGES_URL}/cb`)
+  oauthParams.set('scope', 'read:user')
   const state = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  oauthParams.append('state', state)
-  oauthParams.append('allow_signup', 'false')
+  oauthParams.set('state', state)
+  oauthParams.set('allow_signup', 'false')
 
   session.flash('state', state)
-  session.flash('continue_to', registeredData.callback)
 
   return redirect(oauthUrl.toString() + '?' + oauthParams.toString(), {
     status: 302,

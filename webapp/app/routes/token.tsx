@@ -13,20 +13,28 @@ export const action: ActionFunction = async ({ request, context }) => {
   interface MaybePostData {
     name?: string
     pubkey?: string
+    callback?: string
   }
   const data = await request.json<MaybePostData>()
 
   if (
     !data.name ||
     !data.pubkey ||
+    !data.callback ||
     typeof data.name !== 'string' ||
-    typeof data.pubkey !== 'string'
+    typeof data.pubkey !== 'string' ||
+    typeof data.callback !== 'string'
   ) {
     return new Response('invalid request', { status: 400 })
   }
 
   const key = await importKey(context.cloudflare.env.SYMKEY, 'symmetric')
-  const [token, iv] = await generateToken(data.name, data.pubkey, key)
+  const [token, iv] = await generateToken(
+    data.name,
+    data.pubkey,
+    data.callback,
+    key,
+  )
 
   return new Response(JSON.stringify({ token: btoa(token), iv: btoa(iv) }), {
     status: 200,

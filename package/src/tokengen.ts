@@ -11,16 +11,23 @@ dayjs.tz.setDefault('Asia/Tokyo')
 export const generateToken = async (
   name: string,
   pubkey: string,
+  callback: string,
   key: CryptoKey,
 ) => {
   const now = dayjs.tz().valueOf()
-  const tokenData = btoa(`user:${name}___pubkey:${pubkey}___time:${now}`)
+  const param = new URLSearchParams()
+  param.set('user', name)
+  param.set('pubkey', pubkey)
+  param.set('callback', callback)
+  param.set('time', String(now))
+  const tokenData = btoa(param.toString())
   return await encrypt(new TextEncoder().encode(tokenData), key)
 }
 
 export const verifyToken = async (
   name: string,
   pubkey: string,
+  callback: string,
   key: CryptoKey,
   token: string,
   iv: string,
@@ -32,22 +39,26 @@ export const verifyToken = async (
     return [false, 'invalid token']
   }
   const tokenData = atob(new TextDecoder().decode(decrypted))
-  const data = tokenData.split('___')
+  const data = new URLSearchParams(tokenData)
 
   if (
-    data.filter(d => d.includes('user:')).length !== 1 ||
-    data.filter(d => d.includes('pubkey:')).length !== 1 ||
-    data.filter(d => d.includes('time:')).length !== 1
+    data.getAll('user').length !== 1 ||
+    data.getAll('pubkey').length !== 1 ||
+    data.getAll('callback').length !== 1 ||
+    data.getAll('time').length !== 1
   )
     return [false, 'invalid token']
 
-  const user = data.find(d => d.includes('user:'))?.split(':')[1]
+  const user = data.get('user')
   if (user !== name) return [false, 'user mismatch']
 
-  const pubkeyData = data.find(d => d.includes('pubkey:'))?.split(':')[1]
+  const pubkeyData = data.get('pubkey')
   if (pubkeyData !== pubkey) return [false, 'pubkey mismatch']
 
-  const time = data.find(d => d.includes('time:'))?.split(':')[1]
+  const callbackData = data.get('callback')
+  if (callbackData !== callback) return [false, 'callback mismatch']
+
+  const time = data.get('time')
   if (dayjs.tz().diff(dayjs.tz(Number(time)), 'millisecond') > 10000)
     return [false, 'token expired']
 
