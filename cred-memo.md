@@ -28,7 +28,7 @@
 
 - Symmetric Key (SYMKEY)
   - 値を暗号化して保存するための鍵
-  - <https://auth.maximum.vc/util/keygen> から生成できる (予定)
+  - <https://auth.maximum.vc/keygen> から生成できる (予定)
 - Session Secret (SESSION_SECRET)
   - セッションの暗号化に使用するための文字列
   - `openssl rand -base64 32` で生成可能
@@ -45,6 +45,6 @@
 
 - Private Key (PRIVKEY)
   - Auth で使用するための鍵
-  - <https://auth.maximum.vc/util/keygen> から生成できる (予定)
+  - <https://auth.maximum.vc/keygen> から生成できる (予定)
   - 公開鍵は `webapp/data/pubkey.json` に書いて PR 出してください (予定)
   - ローカル開発時には以下の情報を使用してください: `(TODO: 書く)`

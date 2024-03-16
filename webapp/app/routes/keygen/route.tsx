@@ -15,7 +15,7 @@ export const loader = async () => {
   const pubkey = await exportKey(key.publicKey)
   const privkey = await exportKey(key.privateKey)
   const symkey = await exportKey(await generateSymmetricKey())
-  return json({ key: { pubkey, privkey, symkey } })
+  return json({ pubkey, privkey, symkey })
 }
 
 export const meta: MetaFunction = () => {
@@ -25,7 +25,7 @@ export const meta: MetaFunction = () => {
   ]
 }
 
-export default function UtilKeygen() {
+export default function Keygen() {
   const data = useLoaderData<typeof loader>()
 
   return (
@@ -41,11 +41,11 @@ export default function UtilKeygen() {
       </p>
       <h2>Generated Key:</h2>
       <h3>Public Key</h3>
-      <pre className={style.pre}>{data.key.pubkey}</pre>
+      <pre className={style.pre}>{data.pubkey}</pre>
       <h3>Private Key</h3>
-      <pre className={style.pre}>{data.key.privkey}</pre>
-      <h3>Symmetric Key (使わなくてよいです)</h3>
-      <pre className={style.pre}>{data.key.symkey}</pre>
+      <pre className={style.pre}>{data.privkey}</pre>
+      <h3>Symmetric Key</h3>
+      <pre className={style.pre}>{data.symkey}</pre>
     </>
   )
 }
