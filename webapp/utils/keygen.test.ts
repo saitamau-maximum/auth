@@ -106,9 +106,8 @@ describe('generating symmetric key', () => {
 describe('using the keys', () => {
   it('can sign and verify a message', async () => {
     const keypair = await generateKeyPair()
-    const message = new TextEncoder().encode('Hello, world!')
-    const signature = await sign(message, keypair.privateKey)
-    const verified = await verify(message, signature, keypair.publicKey)
+    const signature = await sign('Hello, world!', keypair.privateKey)
+    const verified = await verify('Hello, world!', signature, keypair.publicKey)
     expect(verified).toBe(true)
   })
 

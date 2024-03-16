@@ -1,0 +1,7 @@
+[
+  {
+    "name": "dummy",
+    "pubkey": "bar",
+    "callback": "http://localhost:3000/callback"
+  }
+]

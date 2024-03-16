@@ -1,17 +1,69 @@
-import type { LoaderFunction, MetaFunction } from '@remix-run/cloudflare'
+import type { LoaderFunction, ActionFunction } from '@remix-run/cloudflare'
 import { redirect } from '@remix-run/cloudflare'
 
+import pubkeyData from '../../data/pubkey.json'
+import { importKey, verify } from '../../utils/keygen'
 import cookieSessionStorage from '../../utils/session.server'
+import { verifyToken } from '../../utils/tokengen'
 
-export const loader: LoaderFunction = async ({ context, params, request }) => {
+export const action: ActionFunction = () =>
+  new Response('method not allowed', { status: 405 })
+
+export const loader: LoaderFunction = async ({ context, request }) => {
   const envvar = context.cloudflare.env
+  const params = new URL(request.url).searchParams
 
-  // TODO: リクエストを検証する
-  // ...
-  params['token']
-  params['name']
-  params['callback_url']
-  params['pubkey']
+  // リクエスト検証
+  // TODO: ちゃんとテストを書く
+  if (
+    !params.has('token') ||
+    !params.has('name') ||
+    !params.has('pubkey') ||
+    !params.has('iv') ||
+    !params.has('mac')
+  ) {
+    throw new Response('invalid request', { status: 400 })
+  }
+
+  const registeredData = pubkeyData.find(
+    data =>
+      data.name === params.get('name')! &&
+      data.pubkey === params.get('pubkey')!,
+  )
+
+  if (registeredData === undefined) {
+    throw new Response('invalid request', { status: 400 })
+  }
+
+  let theirPubkey: CryptoKey
+  try {
+    theirPubkey = await importKey(registeredData.pubkey, 'publicKey')
+  } catch (e) {
+    throw new Response('invalid pubkey', { status: 400 })
+  }
+  if (!theirPubkey.usages.includes('verify'))
+    throw new Response('invalid pubkey', { status: 400 })
+
+  const data4mac = new URLSearchParams({
+    token: params.get('token')!,
+    name: params.get('name')!,
+    pubkey: params.get('pubkey')!,
+    iv: params.get('iv')!,
+  }).toString()
+
+  if (!(await verify(data4mac, params.get('mac')!, theirPubkey)))
+    throw new Response('invalid mac', { status: 400 })
+
+  const key = await importKey(envvar.SYMKEY, 'symmetric')
+  const [verifyResult, message] = await verifyToken(
+    registeredData.name,
+    registeredData.pubkey,
+    key,
+    params.get('token')!,
+    params.get('iv')!,
+  )
+
+  if (!verifyResult) throw new Response(message, { status: 400 })
 
   const { getSession, commitSession } = cookieSessionStorage(envvar)
 
@@ -37,6 +89,7 @@ export const loader: LoaderFunction = async ({ context, params, request }) => {
   oauthParams.append('allow_signup', 'false')
 
   session.flash('state', state)
+  session.flash('continue_to', registeredData.callback)
 
   return redirect(oauthUrl.toString() + '?' + oauthParams.toString(), {
     status: 302,
@@ -44,16 +97,4 @@ export const loader: LoaderFunction = async ({ context, params, request }) => {
       'Set-Cookie': await commitSession(session),
     },
   })
-}
-
-export const meta: MetaFunction = () => {
-  return [
-    { title: 'Maximum Auth' },
-    { name: 'robots', content: 'noindex, nofollow' },
-  ]
-}
-
-export default function Go() {
-  // リダイレクト用なので何も表示しない
-  return null
 }

@@ -50,16 +50,28 @@ const importKey = async (
   }
 }
 
-const sign = async (data: BufferSource, privateKey: CryptoKey) => {
-  return crypto.subtle.sign(keypairHashAlgorithm, privateKey, data)
+const sign = async (data: string, privateKey: CryptoKey) => {
+  const dataBuf = new TextEncoder().encode(data)
+  const resBuf = await crypto.subtle.sign(
+    keypairHashAlgorithm,
+    privateKey,
+    dataBuf,
+  )
+  return btoa(Array.from(new Uint8Array(resBuf)).join(','))
 }
 
 const verify = async (
-  data: BufferSource,
-  signature: ArrayBuffer,
+  data: string,
+  signature: string,
   publicKey: CryptoKey,
 ) => {
-  return crypto.subtle.verify(keypairHashAlgorithm, publicKey, signature, data)
+  const dataBuf = new TextEncoder().encode(data)
+  const signBuf = new Uint8Array(
+    atob(signature)
+      .split(',')
+      .map(byte => parseInt(byte, 10)),
+  )
+  return crypto.subtle.verify(keypairHashAlgorithm, publicKey, signBuf, dataBuf)
 }
 
 const encrypt = async (
