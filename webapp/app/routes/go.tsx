@@ -77,6 +77,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   const { getSession, commitSession } = cookieSessionStorage(envvar)
 
   const session = await getSession(request.headers.get('Cookie'))
+  session.flash('continue_name', encodeURIComponent(params.get('name')!))
   session.flash('continue_to', params.get('callback')!)
 
   if (session.has('id')) {

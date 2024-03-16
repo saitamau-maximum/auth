@@ -19,13 +19,18 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   const session = await getSession(request.headers.get('Cookie'))
 
   const cburl = session.get('continue_to')
-  const registeredData = pubkeyData.find(data => data.callback === cburl)
+  const cbname = decodeURIComponent(session.get('continue_name')!)
+
+  const registeredData = pubkeyData.find(data => data.name === cbname)
 
   if (registeredData === undefined) {
     throw new Response('invalid request', { status: 400 })
   }
 
-  return json({ userdata: session.data, appdata: registeredData })
+  return json({
+    userdata: session.data,
+    appdata: { ...registeredData, callback: cburl },
+  })
 }
 
 export const meta: MetaFunction = () => {

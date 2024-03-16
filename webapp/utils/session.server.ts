@@ -11,6 +11,7 @@ interface SessionData {
 interface SessionFlashData {
   state: string
   continue_to: string
+  continue_name: string
 }
 
 const cookieSessionStorage = (envvar: AppLoadContext['cloudflare']['env']) =>
