@@ -1,16 +1,16 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import {
+  derivePublicKey,
+  exportKey,
+  importKey,
+  generateGoParam,
+} from '@saitamau-maximum/auth'
 
 import handleProxy from './proxy'
 import handleRedirect from './redirect'
 import apiRouter from './router'
+
+const authDomain = 'https://auth.maximum.vc'
+// const authDomain = 'http://localhost:8788'
 
 // Export a default object containing event handlers
 export default {
@@ -21,8 +21,41 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<Response> {
-    // You'll find it helpful to parse the request.url string into a URL object. Learn more at https://developer.mozilla.org/en-US/docs/Web/API/URL
     const url = new URL(request.url)
+
+    const authName = 'maximum-reverse-proxy'
+    const privateKey = await importKey(env.PRIVKEY, 'privateKey')
+    const publicKey = await derivePublicKey(privateKey)
+
+    // ログインしてない場合はログインページに移動
+    const loggedIn = false
+    if (!loggedIn) {
+      const redirectData = await fetch(`${authDomain}/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: authName,
+          pubkey: await exportKey(publicKey),
+        }),
+      }).then(res => res.json<{ token: string; iv: string }>())
+
+      const param = await generateGoParam(
+        authName,
+        await exportKey(publicKey),
+        atob(redirectData.token),
+        atob(redirectData.iv),
+        privateKey,
+      )
+
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: `${authDomain}/go?${param.toString()}`,
+        },
+      })
+    }
 
     // You can get pretty far with simple logic like if/switch-statements
     switch (url.pathname) {

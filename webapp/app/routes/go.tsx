@@ -1,7 +1,7 @@
 import type { LoaderFunction, ActionFunction } from '@remix-run/cloudflare'
 import { redirect } from '@remix-run/cloudflare'
 
-import { importKey, verify, verifyToken } from '@saitamau-maximum/auth'
+import { importKey, verifyToken, verifyMac } from '@saitamau-maximum/auth'
 
 import pubkeyData from '../../data/pubkey.json'
 import cookieSessionStorage from '../../utils/session.server'
@@ -16,11 +16,16 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   // リクエスト検証
   // TODO: ちゃんとテストを書く
   if (
-    !params.has('token') ||
     !params.has('name') ||
     !params.has('pubkey') ||
+    !params.has('token') ||
     !params.has('iv') ||
-    !params.has('mac')
+    !params.has('mac') ||
+    params.getAll('name').length !== 1 ||
+    params.getAll('pubkey').length !== 1 ||
+    params.getAll('token').length !== 1 ||
+    params.getAll('iv').length !== 1 ||
+    params.getAll('mac').length !== 1
   ) {
     throw new Response('invalid request', { status: 400 })
   }
@@ -44,20 +49,20 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   if (!theirPubkey.usages.includes('verify'))
     throw new Response('invalid pubkey', { status: 400 })
 
-  const data4mac = new URLSearchParams({
-    token: params.get('token')!,
-    name: params.get('name')!,
-    pubkey: params.get('pubkey')!,
-    iv: params.get('iv')!,
-  }).toString()
-
-  if (!(await verify(data4mac, params.get('mac')!, theirPubkey)))
-    throw new Response('invalid mac', { status: 400 })
+  const macVerifyResult = await verifyMac(
+    params.get('name')!,
+    params.get('pubkey')!,
+    params.get('token')!,
+    params.get('iv')!,
+    params.get('mac')!,
+    theirPubkey,
+  )
+  if (!macVerifyResult) throw new Response('invalid mac', { status: 400 })
 
   const key = await importKey(envvar.SYMKEY, 'symmetric')
   const [verifyResult, message] = await verifyToken(
-    registeredData.name,
-    registeredData.pubkey,
+    params.get('name')!,
+    params.get('pubkey')!,
     key,
     params.get('token')!,
     params.get('iv')!,

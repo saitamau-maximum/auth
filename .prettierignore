@@ -3,3 +3,4 @@ pnpm-lock.yaml
 webapp/.wrangler
 webapp/public/build
 webapp/functions
+worker/.wrangler

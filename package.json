@@ -20,7 +20,7 @@
     "prettier": "^3.2.5"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,scss,md,toml,yml,yaml,html}": [
+    "*.{js,jsx,ts,tsx,json,css,scss,yml,yaml,html}": [
       "prettier --write"
     ],
     "*.{js,jsx,ts,tsx}": [

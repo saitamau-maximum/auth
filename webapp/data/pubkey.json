@@ -1,7 +1,7 @@
 [
   {
-    "name": "dummy",
-    "pubkey": "bar",
-    "callback": "http://localhost:3000/callback"
+    "name": "maximum-reverse-proxy",
+    "pubkey": "eyJrdHkiOiJFQyIsImtleV9vcHMiOlsidmVyaWZ5Il0sImV4dCI6dHJ1ZSwiY3J2IjoiUC01MjEiLCJ4IjoiQVowdHQyLUlKamIzME5sOGxtaFNjTDNDb0dFcEM1VFVjdlMtU1FZR2gyZVoteHRWRTNIMHQ4REFFMFlSdGN6OUhpM0J4WFFCdXItcldrZHJEcnpCZnZRNiIsInkiOiJBZG9EU1Jlb3VfUzFKMXBNRFYyLWVVT2N1dVZ1aFNhbEl5WHdZZmpES0l4WGk5VU1XWGxxczJKSXNQZWw0UWhLX3preXJpQUltU09fMTBtaFBIRHNTUjFQIn0=",
+    "callback": "http://localhost:8787/callback"
   }
 ]

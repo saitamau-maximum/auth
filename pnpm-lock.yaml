@@ -153,6 +153,10 @@ importers:
         version: 3.30.1(@cloudflare/workers-types@4.20240222.0)
 
   worker:
+    dependencies:
+      '@saitamau-maximum/auth':
+        specifier: workspace:^
+        version: link:../package
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20230518.0

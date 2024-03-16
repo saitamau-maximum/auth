@@ -1,5 +1,6 @@
 export {
   decrypt,
+  derivePublicKey,
   encrypt,
   exportKey,
   generateKeyPair,
@@ -13,6 +14,7 @@ export {
   symmetricUsage,
   verify,
 } from './keygen'
+export { generateGoParam, verifyMac } from './goparam'
 export { generateToken, verifyToken } from './tokengen'
 export { getLoginURL, getLogoutURL }
 export { getUserInfo } from './userinfo'
