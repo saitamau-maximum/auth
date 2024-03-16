@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   decrypt,
+  derivePublicKey,
   encrypt,
   exportKey,
   generateKeyPair,
@@ -14,7 +15,7 @@ import {
   symmetricGenAlgorithm,
   symmetricUsage,
   verify,
-} from './keygen'
+} from '../src/keygen'
 
 describe('algorithm & usage', () => {
   it('uses the correct keypair algorithm', () => {
@@ -69,6 +70,15 @@ describe('generating key pair', () => {
     // なぜか keypair.privateKey と importedPrivkey が等しくならないので
     expect(await exportKey(importedPrivkey)).toBe(exportedPrivkey)
     expect(await exportKey(importedPubkey)).toBe(exportedPubkey)
+  })
+
+  it('can derive a public key from a private key', async () => {
+    const keypair = await generateKeyPair()
+    const exportedPubKey = await exportKey(keypair.publicKey)
+    const derivedPubKey = await exportKey(
+      await derivePublicKey(keypair.privateKey),
+    )
+    expect(exportedPubKey).toBe(derivedPubKey)
   })
 })
 

@@ -1,24 +1,32 @@
-const keypairGenAlgorithm: EcKeyGenParams = {
+const keypairGenAlgorithm = {
   name: 'ECDSA',
   namedCurve: 'P-521',
 }
-const keypairHashAlgorithm: EcdsaParams = {
+const keypairHashAlgorithm = {
   name: 'ECDSA',
   hash: 'SHA-512',
 }
-const keypairUsage: KeyUsage[] = ['sign', 'verify']
+const keypairUsage = ['sign', 'verify']
 
-const symmetricGenAlgorithm: AesKeyGenParams = {
+const symmetricGenAlgorithm = {
   name: 'AES-GCM',
   length: 256,
 }
-const symmetricUsage: KeyUsage[] = ['encrypt', 'decrypt']
+const symmetricUsage = ['encrypt', 'decrypt']
 
 const generateKeyPair = () =>
-  crypto.subtle.generateKey(keypairGenAlgorithm, true, keypairUsage)
+  crypto.subtle.generateKey(
+    keypairGenAlgorithm,
+    true,
+    keypairUsage,
+  ) as Promise<CryptoKeyPair>
 
 const generateSymmetricKey = () =>
-  crypto.subtle.generateKey(symmetricGenAlgorithm, true, symmetricUsage)
+  crypto.subtle.generateKey(
+    symmetricGenAlgorithm,
+    true,
+    symmetricUsage,
+  ) as Promise<CryptoKey>
 
 const exportKey = async (key: CryptoKey) => {
   const exportedKey = await crypto.subtle.exportKey('jwk', key)
@@ -48,6 +56,16 @@ const importKey = async (
       type === 'publicKey' ? ['verify'] : ['sign'],
     )
   }
+}
+
+const derivePublicKey = async (privateKey: CryptoKey) => {
+  const publicKey = (await crypto.subtle.exportKey(
+    'jwk',
+    privateKey,
+  )) as JsonWebKey
+  delete publicKey.d
+  publicKey.key_ops = ['verify']
+  return importKey(btoa(JSON.stringify(publicKey)), 'publicKey')
 }
 
 const sign = async (data: string, privateKey: CryptoKey) => {
@@ -112,6 +130,7 @@ const decrypt = async (data: string, key: CryptoKey, iv: string) => {
 
 export {
   decrypt,
+  derivePublicKey,
   encrypt,
   exportKey,
   generateKeyPair,

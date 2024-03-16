@@ -6,7 +6,7 @@ import {
   exportKey,
   generateKeyPair,
   generateSymmetricKey,
-} from '../../../utils/keygen'
+} from '@saitamau-maximum/auth'
 
 import style from './style.module.css'
 

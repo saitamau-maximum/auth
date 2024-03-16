@@ -29,7 +29,7 @@
     "types": ["@cloudflare/workers-types"],
     "rootDir": "./src",
     "outDir": "./dist",
-    "moduleResolution": "node"
+    "moduleResolution": "Bundler"
   },
   "include": ["./src/**/*"]
 }

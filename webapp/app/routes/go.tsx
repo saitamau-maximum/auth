@@ -1,10 +1,10 @@
 import type { LoaderFunction, ActionFunction } from '@remix-run/cloudflare'
 import { redirect } from '@remix-run/cloudflare'
 
+import { importKey, verify, verifyToken } from '@saitamau-maximum/auth'
+
 import pubkeyData from '../../data/pubkey.json'
-import { importKey, verify } from '../../utils/keygen'
 import cookieSessionStorage from '../../utils/session.server'
-import { verifyToken } from '../../utils/tokengen'
 
 export const action: ActionFunction = () =>
   new Response('method not allowed', { status: 405 })

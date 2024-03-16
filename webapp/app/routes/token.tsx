@@ -1,7 +1,6 @@
 import type { ActionFunction, LoaderFunction } from '@remix-run/cloudflare'
 
-import { importKey } from '../../utils/keygen'
-import { generateToken } from '../../utils/tokengen'
+import { importKey, generateToken } from '@saitamau-maximum/auth'
 
 export const action: ActionFunction = async ({ request, context }) => {
   if (request.method !== 'POST') {
