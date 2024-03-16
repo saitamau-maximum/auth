@@ -21,7 +21,7 @@ export const generateToken = async (
   param.set('callback', callback)
   param.set('time', String(now))
   const tokenData = btoa(param.toString())
-  return await encrypt(new TextEncoder().encode(tokenData), key)
+  return await encrypt(tokenData, key)
 }
 
 export const verifyToken = async (
@@ -32,13 +32,13 @@ export const verifyToken = async (
   token: string,
   iv: string,
 ): Promise<[boolean, string]> => {
-  let decrypted: ArrayBuffer
+  let decrypted: string
   try {
     decrypted = await decrypt(token, key, iv)
   } catch (e) {
     return [false, 'invalid token']
   }
-  const tokenData = atob(new TextDecoder().decode(decrypted))
+  const tokenData = atob(decrypted)
   const data = new URLSearchParams(tokenData)
 
   if (

@@ -93,14 +93,15 @@ const verify = async (
 }
 
 const encrypt = async (
-  data: BufferSource,
+  data: string,
   key: CryptoKey,
 ): Promise<[string, string]> => {
   const iv = crypto.getRandomValues(new Uint8Array(12))
+  const dataBuf = new TextEncoder().encode(data)
   const encrypted = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     key,
-    data,
+    dataBuf,
   )
 
   return [
@@ -110,20 +111,22 @@ const encrypt = async (
 }
 
 const decrypt = async (data: string, key: CryptoKey, iv: string) => {
-  return crypto.subtle.decrypt(
-    {
-      name: 'AES-GCM',
-      iv: new Uint8Array(
-        atob(iv)
+  return new TextDecoder().decode(
+    await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: new Uint8Array(
+          atob(iv)
+            .split(',')
+            .map(byte => parseInt(byte, 10)),
+        ),
+      },
+      key,
+      new Uint8Array(
+        atob(data)
           .split(',')
           .map(byte => parseInt(byte, 10)),
       ),
-    },
-    key,
-    new Uint8Array(
-      atob(data)
-        .split(',')
-        .map(byte => parseInt(byte, 10)),
     ),
   )
 }

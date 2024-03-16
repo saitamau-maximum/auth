@@ -22,7 +22,7 @@ const tokenGenForTest = async (
   for (const c of callback) param.append('callback', c)
   for (const t of time) param.append('time', String(t))
   const tokenData = btoa(param.toString())
-  return await encrypt(new TextEncoder().encode(tokenData), key)
+  return await encrypt(tokenData, key)
 }
 
 describe('basic generate & verify', () => {

@@ -123,9 +123,8 @@ describe('using the keys', () => {
 
   it('can encrypt and decrypt a message', async () => {
     const key = await generateSymmetricKey()
-    const message = new TextEncoder().encode('Hello, world!')
-    const [encryptedData, iv] = await encrypt(message, key)
+    const [encryptedData, iv] = await encrypt('Hello, world!', key)
     const decrypted = await decrypt(encryptedData, key, iv)
-    expect(new TextDecoder().decode(decrypted)).toBe('Hello, world!')
+    expect(decrypted).toBe('Hello, world!')
   })
 })
