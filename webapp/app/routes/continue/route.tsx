@@ -1,11 +1,16 @@
-import {
-  json,
-  type LoaderFunction,
-  type MetaFunction,
+import type {
+  ActionFunction,
+  LoaderFunction,
+  MetaFunction,
 } from '@remix-run/cloudflare'
+import { json } from '@remix-run/cloudflare'
 import { useLoaderData } from '@remix-run/react'
 
+import pubkeyData from '../../../data/pubkey.json'
 import cookieSessionStorage from '../../../utils/session.server'
+
+export const action: ActionFunction = () =>
+  new Response('method not allowed', { status: 405 })
 
 export const loader: LoaderFunction = async ({ context, request }) => {
   const envvar = context.cloudflare.env
@@ -13,7 +18,14 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   const { getSession } = cookieSessionStorage(envvar)
   const session = await getSession(request.headers.get('Cookie'))
 
-  return json({ data: session.data })
+  const cburl = session.get('continue_to')
+  const registeredData = pubkeyData.find(data => data.callback === cburl)
+
+  if (registeredData === undefined) {
+    throw new Response('invalid request', { status: 400 })
+  }
+
+  return json({ userdata: session.data, appdata: registeredData })
 }
 
 export const meta: MetaFunction = () => {
@@ -28,7 +40,10 @@ export default function Continue() {
 
   return (
     <>
-      {JSON.stringify(data.data)}
+      {JSON.stringify(data.userdata)}
+      <br />
+      {JSON.stringify(data.appdata)}
+      <br />
       このページに移動します。 OK？
       <br />
       続ける → <br />

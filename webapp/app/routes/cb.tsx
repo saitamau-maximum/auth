@@ -1,10 +1,13 @@
-import type { LoaderFunction, MetaFunction } from '@remix-run/cloudflare'
+import type { ActionFunction, LoaderFunction } from '@remix-run/cloudflare'
 import { redirect } from '@remix-run/react'
 
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from 'octokit'
 
 import cookieSessionStorage from '../../utils/session.server'
+
+export const action: ActionFunction = () =>
+  new Response('method not allowed', { status: 405 })
 
 export const loader: LoaderFunction = async ({ context, request }) => {
   const envvar = context.cloudflare.env
@@ -107,16 +110,4 @@ export const loader: LoaderFunction = async ({ context, request }) => {
       'Set-Cookie': await commitSession(session),
     },
   })
-}
-
-export default function Callback() {
-  // リダイレクト用なので何も表示しない
-  return null
-}
-
-export const meta: MetaFunction = () => {
-  return [
-    { title: 'Maximum Auth' },
-    { name: 'robots', content: 'noindex, nofollow' },
-  ]
 }
