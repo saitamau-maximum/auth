@@ -10,6 +10,7 @@ interface Env {
   GITHUB_OAUTH_ID: string
   GITHUB_OAUTH_SECRET: string
   SYMKEY: string
+  PRIVKEY: string
   SESSION_SECRET: string
   CF_PAGES_URL: string
 }

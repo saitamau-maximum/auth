@@ -29,6 +29,10 @@
 - Symmetric Key (SYMKEY)
   - 値を暗号化して保存するための鍵
   - <https://auth.maximum.vc/keygen> から生成できる (予定)
+- Private Key (PRIVKEY)
+  - Auth の Callback 認証で署名するための鍵
+  - <https://auth.maximum.vc/keygen> から生成できる (予定)
+  - Cloudflare には公開鍵 `eyJrdHkiOiJFQyIsImtleV9vcHMiOlsidmVyaWZ5Il0sImV4dCI6dHJ1ZSwiY3J2IjoiUC01MjEiLCJ4IjoiQUFUNVA4N3pCekFjdGcwakQ3NkNWbWNaX3NNS0hkWTJGeGZ2REwxMWxxR3hlTUZBd3REYnhpdTMwZUtkX2F3T3BjaG1relM3N2RkUmNLcEktSHdwQTQzciIsInkiOiJBTjRjcVljc0dsTDNXWTZUUXZRcklsMFExNVRDRzdTVkNVYk5kbURDUUg4dEhQZzZKTU9Cek55dFhLV1JUc3REd05qbVAzak12c3ZzdWdYelVBZ3kyNTRKIn0=` に対応する秘密鍵が保存されている
 - Session Secret (SESSION_SECRET)
   - セッションの暗号化に使用するための文字列
   - `openssl rand -base64 32` で生成可能
@@ -47,4 +51,3 @@
   - Auth で使用するための鍵
   - <https://auth.maximum.vc/keygen> から生成できる (予定)
   - 公開鍵は `webapp/data/pubkey.json` に書いて PR 出してください (予定)
-  - ローカル開発時には以下の情報を使用してください: `(TODO: 書く)`
