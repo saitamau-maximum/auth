@@ -62,22 +62,24 @@ const verify = async (
   return crypto.subtle.verify(keypairHashAlgorithm, publicKey, signature, data)
 }
 
-const encrypt = async (data: BufferSource, key: CryptoKey) => {
+const encrypt = async (
+  data: BufferSource,
+  key: CryptoKey,
+): Promise<[string, string]> => {
   const iv = crypto.getRandomValues(new Uint8Array(12))
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data,
+  )
+
   return [
-    await crypto.subtle.encrypt(
-      {
-        name: 'AES-GCM',
-        iv,
-      },
-      key,
-      data,
-    ),
+    btoa(Array.from(new Uint8Array(encrypted)).join(',')),
     btoa(Array.from(iv).join(',')),
-  ] as [ArrayBuffer, string]
+  ]
 }
 
-const decrypt = async (data: BufferSource, key: CryptoKey, iv: string) => {
+const decrypt = async (data: string, key: CryptoKey, iv: string) => {
   return crypto.subtle.decrypt(
     {
       name: 'AES-GCM',
@@ -88,7 +90,11 @@ const decrypt = async (data: BufferSource, key: CryptoKey, iv: string) => {
       ),
     },
     key,
-    data,
+    new Uint8Array(
+      atob(data)
+        .split(',')
+        .map(byte => parseInt(byte, 10)),
+    ),
   )
 }
 
