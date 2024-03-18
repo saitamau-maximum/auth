@@ -161,9 +161,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20230518.0
         version: 4.20240222.0
-      itty-router:
-        specifier: ^3.0.12
-        version: 3.0.12
       typescript:
         specifier: ^5.0.4
         version: 5.3.3
@@ -5046,10 +5043,6 @@ packages:
       has-symbols: 1.0.3
       reflect.getprototypeof: 1.0.5
       set-function-name: 2.0.2
-    dev: true
-
-  /itty-router@3.0.12:
-    resolution: {integrity: sha512-s98XTPhle6GGbaFf0kYrOD3Q8gyhnqvOqkwYijC3AmkceNKqWUp13YHg6dWmqmVv4pP7l7c94XI92I0EXVGO0w==}
     dev: true
 
   /jackspeak@2.3.6:
