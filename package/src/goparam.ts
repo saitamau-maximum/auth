@@ -40,5 +40,9 @@ export const verifyMac = async (
   trustedPubkey: CryptoKey,
 ) => {
   const baseParam = generateGoParamBase(name, pubkey, callback, token, iv)
-  return await verify(baseParam.toString(), mac, trustedPubkey)
+  try {
+    return await verify(baseParam.toString(), mac, trustedPubkey)
+  } catch (e) {
+    return false
+  }
 }

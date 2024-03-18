@@ -1,3 +1,6 @@
+const getLoginURL = () => '/auth/login'
+const getLogoutURL = () => '/auth/logout'
+
 export {
   decrypt,
   derivePublicKey,
@@ -19,8 +22,4 @@ export { generateToken, verifyToken } from './tokengen'
 export { getLoginURL, getLogoutURL }
 export { getUserInfo } from './userinfo'
 export { middleware } from './middleware'
-
-const getLoginURL = () => '/auth/login'
-const getLogoutURL = () => '/auth/logout'
-
 export { validateRequest } from './validate'
