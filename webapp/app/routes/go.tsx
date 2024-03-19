@@ -36,6 +36,20 @@ export const loader: LoaderFunction = async ({ context, request }) => {
     throw new Response('invalid request', { status: 400 })
   }
 
+  if (!URL.canParse(params.get('callback')!)) {
+    throw new Response('invalid request', { status: 400 })
+  }
+
+  const cbUrl = new URL(params.get('callback')!)
+  if (
+    cbUrl.username !== '' ||
+    cbUrl.password !== '' ||
+    cbUrl.search !== '' ||
+    cbUrl.hash !== ''
+  ) {
+    throw new Response('invalid request', { status: 400 })
+  }
+
   const registeredData = pubkeyData.find(
     data =>
       data.name === params.get('name')! &&

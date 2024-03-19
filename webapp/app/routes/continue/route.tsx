@@ -64,7 +64,13 @@ export const meta: MetaFunction = () => {
 
 export default function Continue() {
   const data = useLoaderData<typeof loader>()
-  const continueUrl = `${data.appdata.callback}?authdata=${data.authdata}&iv=${data.iv}&signature=${data.signature}&signatureIv=${data.signatureIv}`
+  const continueUrl = new URL(data.appdata.callback)
+  continueUrl.searchParams.set('authdata', data.authdata)
+  continueUrl.searchParams.set('iv', data.iv)
+  continueUrl.searchParams.set('signature', data.signature)
+  continueUrl.searchParams.set('signatureIv', data.signatureIv)
+  const cancelUrl = new URL(data.appdata.callback)
+  cancelUrl.searchParams.set('cancel', 'true')
 
   return (
     <>
@@ -76,8 +82,8 @@ export default function Continue() {
           </div>
           <div>
             <span>{data.appdata.name}</span> に移動します。OK？
-            <a href={continueUrl}>続ける</a>
-            <a href={`${data.appdata.callback}?cancel=true`}>やっぱりやめる</a>
+            <a href={continueUrl.toString()}>続ける</a>
+            <a href={cancelUrl.toString()}>やっぱりやめる</a>
           </div>
         </>
       ) : (
