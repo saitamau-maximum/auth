@@ -2,6 +2,8 @@ import type { ActionFunction, LoaderFunction } from '@remix-run/cloudflare'
 
 import { importKey, generateToken } from '@saitamau-maximum/auth/internal'
 
+import pubkeyData from '../../data/pubkey.json'
+
 export const action: ActionFunction = async ({ request, context }) => {
   if (request.method !== 'POST') {
     return new Response('method not allowed', { status: 405 })
@@ -26,6 +28,14 @@ export const action: ActionFunction = async ({ request, context }) => {
     typeof data.callback !== 'string'
   ) {
     return new Response('invalid request', { status: 400 })
+  }
+
+  const registeredData = pubkeyData.find(
+    regdata => regdata.name === data.name && regdata.pubkey === data.pubkey,
+  )
+
+  if (registeredData === undefined) {
+    throw new Response('invalid request', { status: 400 })
   }
 
   const key = await importKey(context.cloudflare.env.SYMKEY, 'symmetric')
