@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { generateGoParam, verifyMac } from '../src/goparam'
-import { generateKeyPair } from '../src/keygen'
+import { generateGoParam, verifyMac } from '../../src/internal/goparam'
+import { generateKeyPair } from '../../src/internal/keygen'
 
 describe('correctly works', () => {
   const getRandomString = () => Math.random().toString(36).substring(7)

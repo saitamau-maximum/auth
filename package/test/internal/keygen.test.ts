@@ -15,7 +15,7 @@ import {
   symmetricGenAlgorithm,
   symmetricUsage,
   verify,
-} from '../src/keygen'
+} from '../../src/internal/keygen'
 
 describe('algorithm & usage', () => {
   it('uses the correct keypair algorithm', () => {

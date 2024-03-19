@@ -6,7 +6,7 @@ import type {
 import { json } from '@remix-run/cloudflare'
 import { useLoaderData } from '@remix-run/react'
 
-import { encrypt, importKey, sign } from '@saitamau-maximum/auth'
+import { encrypt, importKey, sign } from '@saitamau-maximum/auth/internal'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'

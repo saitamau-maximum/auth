@@ -3,8 +3,9 @@ import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import { describe, expect, it } from 'vitest'
 
-import { generateSymmetricKey, encrypt } from '../src/keygen'
-import { generateToken, verifyToken } from '../src/tokengen'
+import { generateSymmetricKey, encrypt } from '../../src/internal/keygen'
+import { generateToken, verifyToken } from '../../src/internal/tokengen'
+
 dayjs.extend(utc)
 dayjs.extend(timezone)
 dayjs.tz.setDefault('Asia/Tokyo')

@@ -7,7 +7,7 @@
 - `index.ts`: こいつら全部 export マン
   - 一応 `export * from "..."` みたいな書き方はしてない
 
-### webapp とのブリッジ
+### webapp とのブリッジ (internal)
 
 - `goparam.ts`: webapp の `/go` に送信するクエリパラメータの生成とその検証
 - `keygen.ts`: 鍵生成のユーティリティ

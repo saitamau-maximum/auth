@@ -1,7 +1,11 @@
 import type { LoaderFunction, ActionFunction } from '@remix-run/cloudflare'
 import { redirect } from '@remix-run/cloudflare'
 
-import { importKey, verifyToken, verifyMac } from '@saitamau-maximum/auth'
+import {
+  importKey,
+  verifyToken,
+  verifyMac,
+} from '@saitamau-maximum/auth/internal'
 
 import pubkeyData from '../../data/pubkey.json'
 import cookieSessionStorage from '../../utils/session.server'

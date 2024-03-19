@@ -3,7 +3,7 @@ import {
   exportKey,
   importKey,
   generateGoParam,
-} from '@saitamau-maximum/auth'
+} from '@saitamau-maximum/auth/internal'
 
 // const authDomain = 'https://auth.maximum.vc'
 const authDomain = 'http://127.0.0.1:8788'

@@ -18,8 +18,11 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./internal": {
+      "import": "./dist/internal/index.js",
+      "types": "./dist/internal/index.d.ts"
     }
   },
   "license": "MIT",
