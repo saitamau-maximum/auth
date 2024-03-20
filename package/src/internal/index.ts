@@ -17,3 +17,4 @@ export {
 export { generateGoParam, verifyMac } from './goparam'
 export { generateToken, verifyToken } from './tokengen'
 export { handleLogin } from './handleLogin'
+export { handleLogout } from './handleLogout'

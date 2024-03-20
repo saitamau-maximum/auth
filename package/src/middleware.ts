@@ -1,4 +1,4 @@
-import { handleLogin } from './internal'
+import { handleLogin, handleLogout } from './internal'
 
 interface Env {
   AUTH_NAME: string
@@ -16,7 +16,11 @@ const middleware: PagesFunction<Env> = async context => {
   const reqUrl = new URL(context.request.url)
 
   if (reqUrl.pathname.startsWith('/auth/')) {
-    // to be implemented
+    if (reqUrl.pathname === '/auth/logout') {
+      return handleLogout(context.request)
+    }
+
+    return new Response('not found', { status: 404 })
   }
 
   const checkLoggedIn = () => {

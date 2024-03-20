@@ -5,6 +5,7 @@ import {
   verify,
   sign,
   handleLogin,
+  handleLogout,
 } from '@saitamau-maximum/auth/internal'
 import type { CookieSerializeOptions } from 'cookie'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
@@ -112,48 +113,7 @@ export default {
 
       // Logout
       if (url.pathname === '/auth/logout') {
-        const newHeader = new Headers(request.headers)
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__authdata', '', {
-            ...cookieOptions,
-            maxAge: -1,
-          }),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__iv', '', {
-            ...cookieOptions,
-            maxAge: -1,
-          }),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__sign1', '', {
-            ...cookieOptions,
-            maxAge: -1,
-          }),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__sign2', '', {
-            ...cookieOptions,
-            maxAge: -1,
-          }),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__continue_to', '', {
-            ...cookieOptions,
-            maxAge: -1,
-          }),
-        )
-        newHeader.set('Location', '/')
-
-        return new Response(null, {
-          status: 302,
-          headers: newHeader,
-        })
+        return handleLogout(request)
       }
 
       return new Response('not found', { status: 404 })
