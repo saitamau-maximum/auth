@@ -16,5 +16,6 @@ export {
 } from './keygen'
 export { generateGoParam, verifyMac } from './goparam'
 export { generateToken, verifyToken } from './tokengen'
+export { handleCallback } from './handleCallback'
 export { handleLogin } from './handleLogin'
 export { handleLogout } from './handleLogout'

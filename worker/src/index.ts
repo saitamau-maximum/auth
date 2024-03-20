@@ -6,9 +6,9 @@ import {
   sign,
   handleLogin,
   handleLogout,
+  handleCallback,
 } from '@saitamau-maximum/auth/internal'
-import type { CookieSerializeOptions } from 'cookie'
-import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import { parse as parseCookie } from 'cookie'
 
 export default {
   async fetch(
@@ -23,91 +23,14 @@ export default {
     const privateKey = await importKey(env.PRIVKEY, 'privateKey')
     const publicKey = await derivePublicKey(privateKey)
 
-    const cookieOptions: CookieSerializeOptions = {
-      httpOnly: true,
-      secure: true,
-      path: '/',
-      maxAge: 60 * 60 * 24, // 1 day
-    }
-
     // Auth Routes
     if (url.pathname.startsWith('/auth/')) {
       // Callback
       if (url.pathname === '/auth/callback') {
-        const param = url.searchParams
-
-        if (param.has('cancel')) {
-          // TODO: UI しっかりする
-          return new Response(
-            '認証をキャンセルしました。このページにアクセスするにはログインが必要です。 <a href="/">再ログイン</a><a href="/auth/logout">ログアウト</a>',
-            { status: 401 },
-          )
-        }
-
-        if (
-          ['authdata', 'iv', 'signature', 'signatureIv'].some(
-            key => !param.has(key) || param.getAll(key).length !== 1,
-          )
-        ) {
-          return new Response('invalid request', { status: 400 })
-        }
-
-        const authPubkey = await importKey(env.AUTH_PUBKEY, 'publicKey')
-        if (
-          !(await verify(
-            param.get('authdata')!,
-            param.get('signature')!,
-            authPubkey,
-          )) ||
-          !(await verify(
-            param.get('iv')!,
-            param.get('signatureIv')!,
-            authPubkey,
-          ))
-        ) {
-          return new Response('invalid signature', { status: 400 })
-        }
-
-        const cookieData = request.headers.get('Cookie')
-        if (!cookieData) {
-          return new Response('invalid request', { status: 400 })
-        }
-
-        const continueUrl = parseCookie(cookieData)['__continue_to']
-
-        const newHeader = new Headers(request.headers)
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__continue_to', '', {
-            ...cookieOptions,
-            maxAge: -1,
-          }),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__authdata', param.get('authdata')!, cookieOptions),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__iv', param.get('iv')!, cookieOptions),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie('__sign1', param.get('signature')!, cookieOptions),
-        )
-        newHeader.append(
-          'Set-Cookie',
-          serializeCookie(
-            '__sign2',
-            await sign(param.get('authdata')!, privateKey),
-            cookieOptions,
-          ),
-        )
-        newHeader.set('Location', continueUrl || '/')
-
-        return new Response(null, {
-          status: 302,
-          headers: newHeader,
+        return handleCallback(request, {
+          authName,
+          privateKey: env.PRIVKEY,
+          authPubkey: env.AUTH_PUBKEY,
         })
       }
 

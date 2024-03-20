@@ -1,5 +1,6 @@
 import { serialize as serializeCookie } from 'cookie'
 
+import { AUTH_DOMAIN } from './const'
 import { cookieOptions } from './cookie'
 import { generateGoParam } from './goparam'
 import { derivePublicKey, exportKey, importKey } from './keygen'
@@ -34,7 +35,7 @@ export const handleLogin = async (
 
   const reqUrl = new URL(request.url)
   const callbackUrl = `${reqUrl.origin}/auth/callback`
-  const authOrigin = options.authOrigin || 'https://auth.maximum.vc'
+  const authOrigin = options.authOrigin || AUTH_DOMAIN
   const privkey = await importKey(options.privateKey, 'privateKey')
   const pubkey = await derivePublicKey(privkey)
 

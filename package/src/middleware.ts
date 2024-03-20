@@ -1,9 +1,10 @@
-import { handleLogin, handleLogout } from './internal'
+import { handleCallback, handleLogin, handleLogout } from './internal'
 
 interface Env {
   AUTH_NAME: string
   PRIVKEY: string
   AUTH_DOMAIN?: string
+  AUTH_PUBKEY?: string
 }
 
 const middleware: PagesFunction<Env> = async context => {
@@ -16,6 +17,14 @@ const middleware: PagesFunction<Env> = async context => {
   const reqUrl = new URL(context.request.url)
 
   if (reqUrl.pathname.startsWith('/auth/')) {
+    if (reqUrl.pathname === '/auth/callback') {
+      return handleCallback(context.request, {
+        authName: context.env.AUTH_NAME,
+        privateKey: context.env.PRIVKEY,
+        authPubkey: context.env.AUTH_PUBKEY,
+      })
+    }
+
     if (reqUrl.pathname === '/auth/logout') {
       return handleLogout(context.request)
     }
