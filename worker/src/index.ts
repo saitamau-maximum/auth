@@ -1,3 +1,4 @@
+import { validateRequest as validateRequestFromProxy } from '@saitamau-maximum/auth'
 import {
   derivePublicKey,
   exportKey,
@@ -19,7 +20,7 @@ export default {
   ): Promise<Response> {
     const url = new URL(request.url)
 
-    const authName = 'maximum-reverse-proxy'
+    const authName = 'Maximum Reverse Proxy'
     const privateKey = await importKey(env.PRIVKEY, 'privateKey')
     const publicKey = await derivePublicKey(privateKey)
 
@@ -43,10 +44,9 @@ export default {
     }
 
     if (
-      request.headers.has('X-Maximum-Auth-Pubkey') ||
-      request.headers.has('X-Maximum-Auth-Name') ||
-      request.headers.has('X-Maximum-Auth-Key') ||
-      request.headers.has('X-Maximum-Auth-Mac')
+      await validateRequestFromProxy(request.headers, {
+        proxyPubkey: await exportKey(publicKey),
+      })
     ) {
       return new Response('infinity loop?', { status: 500 })
     }

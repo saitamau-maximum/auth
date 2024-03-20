@@ -1,3 +1,4 @@
+export { AUTH_DOMAIN, AUTH_PUBKEY, PROXY_PUBKEY } from './const'
 export {
   decrypt,
   derivePublicKey,
