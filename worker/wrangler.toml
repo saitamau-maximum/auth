@@ -2,3 +2,7 @@ name = "saitamau-maximum-auth-proxy-worker"
 main = "src/index.ts"
 compatibility_date = "2024-02-23"
 workers_dev = false
+
+[vars]
+AUTH_DOMAIN = "https://auth.maximum.vc"
+AUTH_PUBKEY = "eyJrdHkiOiJFQyIsImtleV9vcHMiOlsidmVyaWZ5Il0sImV4dCI6dHJ1ZSwiY3J2IjoiUC01MjEiLCJ4IjoiQUFUNVA4N3pCekFjdGcwakQ3NkNWbWNaX3NNS0hkWTJGeGZ2REwxMWxxR3hlTUZBd3REYnhpdTMwZUtkX2F3T3BjaG1relM3N2RkUmNLcEktSHdwQTQzciIsInkiOiJBTjRjcVljc0dsTDNXWTZUUXZRcklsMFExNVRDRzdTVkNVYk5kbURDUUg4dEhQZzZKTU9Cek55dFhLV1JUc3REd05qbVAzak12c3ZzdWdYelVBZ3kyNTRKIn0="

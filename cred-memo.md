@@ -51,3 +51,8 @@
   - Auth で使用するための鍵
   - <https://auth.maximum.vc/keygen> から生成できる (予定)
   - 公開鍵は `webapp/data/pubkey.json` に書いて PR 出してください (予定)
+- Auth Domain (AUTH_DOMAIN)
+  - ローカルで Auth Webapp を立ち上げる時に指定する
+- Auth Public Key (AUTH_PUBKEY)
+  - ローカルで Auth Webapp を立ち上げる時に指定する
+  - `auth.maximum.vc` を使うときには ↑ に書いてある公開鍵を使う

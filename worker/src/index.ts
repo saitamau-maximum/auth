@@ -9,11 +9,6 @@ import {
 import type { CookieSerializeOptions } from 'cookie'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 
-const authDomain = 'https://auth.maximum.vc'
-// const authDomain = 'http://127.0.0.1:8788'
-const authPubkeyStr =
-  'eyJrdHkiOiJFQyIsImtleV9vcHMiOlsidmVyaWZ5Il0sImV4dCI6dHJ1ZSwiY3J2IjoiUC01MjEiLCJ4IjoiQUFUNVA4N3pCekFjdGcwakQ3NkNWbWNaX3NNS0hkWTJGeGZ2REwxMWxxR3hlTUZBd3REYnhpdTMwZUtkX2F3T3BjaG1relM3N2RkUmNLcEktSHdwQTQzciIsInkiOiJBTjRjcVljc0dsTDNXWTZUUXZRcklsMFExNVRDRzdTVkNVYk5kbURDUUg4dEhQZzZKTU9Cek55dFhLV1JUc3REd05qbVAzak12c3ZzdWdYelVBZ3kyNTRKIn0='
-
 export default {
   async fetch(
     request: Request,
@@ -21,6 +16,7 @@ export default {
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     ctx: ExecutionContext,
   ): Promise<Response> {
+    const authDomain = new URL(env.AUTH_DOMAIN).origin
     const url = new URL(request.url)
 
     const authName = 'maximum-reverse-proxy'
@@ -59,7 +55,7 @@ export default {
         return new Response('invalid request', { status: 400 })
       }
 
-      const authPubkey = await importKey(authPubkeyStr, 'publicKey')
+      const authPubkey = await importKey(env.AUTH_PUBKEY, 'publicKey')
       if (
         !(await verify(
           param.get('authdata')!,
