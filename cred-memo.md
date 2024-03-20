@@ -49,8 +49,7 @@
 
 - Private Key (PRIVKEY)
   - Auth で使用するための鍵
-  - <https://auth.maximum.vc/keygen> から生成できる (予定)
-  - 公開鍵は `webapp/data/pubkey.json` に書いて PR 出してください (予定)
+  - Cloudflare には、公開鍵 `eyJrdHkiOiJFQyIsImtleV9vcHMiOlsidmVyaWZ5Il0sImV4dCI6dHJ1ZSwiY3J2IjoiUC01MjEiLCJ4IjoiQUxrNEJxbmpwY2d3UHo2QmdtdkJJVFBnTXlYbXJpbXlfUHJCTVl5dVNyTmQtWW9WdFRpWXozRVFYeWxPc2tXTnhmdUdvVFJqV3YzaXo2Q1NrUWFaRjI2SiIsInkiOiJBTzd0R0hKNUhkS0J6NzNfa3dRRm45d0hLQ1pLTmpnLTdhX29jNGV2VHhKaEZpdnNYc1B2cmlqZlBKazFLMzN6RldTUTVxb2t5ZXU4Y1lWb0dEUEhHWGdRIn0=` に対応する秘密鍵が保存されている
 - Auth Domain (AUTH_DOMAIN)
   - ローカルで Auth Webapp を立ち上げる時に指定する
 - Auth Public Key (AUTH_PUBKEY)
