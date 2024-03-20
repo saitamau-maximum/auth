@@ -30,84 +30,139 @@ export default {
       maxAge: 60 * 60 * 24, // 1 day
     }
 
-    // Callback
-    if (url.pathname === '/auth/callback') {
-      const param = url.searchParams
+    // Auth Routes
+    if (url.pathname.startsWith('/auth/')) {
+      // Callback
+      if (url.pathname === '/auth/callback') {
+        const param = url.searchParams
 
-      if (param.has('cancel')) {
-        // TODO: UI しっかりする
-        return new Response(
-          '認証をキャンセルしました。このページにアクセスするにはログインが必要です。',
-          { status: 401 },
+        if (param.has('cancel')) {
+          // TODO: UI しっかりする
+          return new Response(
+            '認証をキャンセルしました。このページにアクセスするにはログインが必要です。 <a href="/">再ログイン</a><a href="/auth/logout">ログアウト</a>',
+            { status: 401 },
+          )
+        }
+
+        if (
+          !param.has('authdata') ||
+          !param.has('iv') ||
+          !param.has('signature') ||
+          !param.has('signatureIv') ||
+          param.getAll('authdata').length !== 1 ||
+          param.getAll('iv').length !== 1 ||
+          param.getAll('signature').length !== 1 ||
+          param.getAll('signatureIv').length !== 1
+        ) {
+          return new Response('invalid request', { status: 400 })
+        }
+
+        const authPubkey = await importKey(env.AUTH_PUBKEY, 'publicKey')
+        if (
+          !(await verify(
+            param.get('authdata')!,
+            param.get('signature')!,
+            authPubkey,
+          )) ||
+          !(await verify(
+            param.get('iv')!,
+            param.get('signatureIv')!,
+            authPubkey,
+          ))
+        ) {
+          return new Response('invalid signature', { status: 400 })
+        }
+
+        const cookieData = request.headers.get('Cookie')
+        if (!cookieData) {
+          return new Response('invalid request', { status: 400 })
+        }
+
+        const continueUrl = parseCookie(cookieData)['__continue_to']
+
+        const newHeader = new Headers(request.headers)
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__continue_to', '', {
+            ...cookieOptions,
+            maxAge: -1,
+          }),
         )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__authdata', param.get('authdata')!, cookieOptions),
+        )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__iv', param.get('iv')!, cookieOptions),
+        )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__sign1', param.get('signature')!, cookieOptions),
+        )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie(
+            '__sign2',
+            await sign(param.get('authdata')!, privateKey),
+            cookieOptions,
+          ),
+        )
+        newHeader.set('Location', continueUrl || '/')
+
+        return new Response(null, {
+          status: 302,
+          headers: newHeader,
+        })
       }
 
-      if (
-        !param.has('authdata') ||
-        !param.has('iv') ||
-        !param.has('signature') ||
-        !param.has('signatureIv') ||
-        param.getAll('authdata').length !== 1 ||
-        param.getAll('iv').length !== 1 ||
-        param.getAll('signature').length !== 1 ||
-        param.getAll('signatureIv').length !== 1
-      ) {
-        return new Response('invalid request', { status: 400 })
+      // Logout
+      if (url.pathname === '/auth/logout') {
+        const newHeader = new Headers(request.headers)
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__authdata', '', {
+            ...cookieOptions,
+            maxAge: -1,
+          }),
+        )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__iv', '', {
+            ...cookieOptions,
+            maxAge: -1,
+          }),
+        )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__sign1', '', {
+            ...cookieOptions,
+            maxAge: -1,
+          }),
+        )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__sign2', '', {
+            ...cookieOptions,
+            maxAge: -1,
+          }),
+        )
+        newHeader.append(
+          'Set-Cookie',
+          serializeCookie('__continue_to', '', {
+            ...cookieOptions,
+            maxAge: -1,
+          }),
+        )
+        newHeader.set('Location', '/')
+
+        return new Response(null, {
+          status: 302,
+          headers: newHeader,
+        })
       }
 
-      const authPubkey = await importKey(env.AUTH_PUBKEY, 'publicKey')
-      if (
-        !(await verify(
-          param.get('authdata')!,
-          param.get('signature')!,
-          authPubkey,
-        )) ||
-        !(await verify(param.get('iv')!, param.get('signatureIv')!, authPubkey))
-      ) {
-        return new Response('invalid signature', { status: 400 })
-      }
-
-      const cookieData = request.headers.get('Cookie')
-      if (!cookieData) {
-        return new Response('invalid request', { status: 400 })
-      }
-
-      const continueUrl = parseCookie(cookieData)['__continue_to']
-
-      const newHeader = new Headers(request.headers)
-      newHeader.append(
-        'Set-Cookie',
-        serializeCookie('__continue_to', '', {
-          ...cookieOptions,
-          maxAge: -1,
-        }),
-      )
-      newHeader.append(
-        'Set-Cookie',
-        serializeCookie('__authdata', param.get('authdata')!, cookieOptions),
-      )
-      newHeader.append(
-        'Set-Cookie',
-        serializeCookie('__iv', param.get('iv')!, cookieOptions),
-      )
-      newHeader.append(
-        'Set-Cookie',
-        serializeCookie('__sign1', param.get('signature')!, cookieOptions),
-      )
-      newHeader.append(
-        'Set-Cookie',
-        serializeCookie(
-          '__sign2',
-          await sign(param.get('authdata')!, privateKey),
-          cookieOptions,
-        ),
-      )
-      newHeader.set('Location', continueUrl || '/')
-
-      return new Response(null, {
-        status: 302,
-        headers: newHeader,
-      })
+      return new Response('not found', { status: 404 })
     }
 
     // ログインしてない場合はログインページに移動
