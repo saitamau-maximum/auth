@@ -165,6 +165,15 @@ export default {
       return new Response('not found', { status: 404 })
     }
 
+    if (
+      request.headers.has('X-Maximum-Auth-Pubkey') ||
+      request.headers.has('X-Maximum-Auth-Name') ||
+      request.headers.has('X-Maximum-Auth-Key') ||
+      request.headers.has('X-Maximum-Auth-Mac')
+    ) {
+      return new Response('infinity loop?', { status: 500 })
+    }
+
     // ログインしてない場合はログインページに移動
     const checkLoggedIn = async () => {
       const cookie = parseCookie(request.headers.get('Cookie') || '')
@@ -220,16 +229,18 @@ export default {
       })
     }
 
-    if (url.pathname === '/hoge') {
-      return new Response('hoge', { status: 200 })
-    }
+    const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
+    const mac = await sign(rand, privateKey)
 
     // それ以外の場合は Proxy
     const res = await fetch(url.toString(), {
       ...request,
       headers: {
         ...request.headers,
-        // TODO: 専用のヘッダーを追加
+        'X-Maximum-Auth-Pubkey': await exportKey(publicKey),
+        'X-Maximum-Auth-Name': authName,
+        'X-Maximum-Auth-Key': rand,
+        'X-Maximum-Auth-Mac': mac,
       },
     })
 
