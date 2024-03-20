@@ -12,20 +12,17 @@ export const action: ActionFunction = async ({ request, context }) => {
     return new Response('invalid request', { status: 400 })
   }
 
-  interface MaybePostData {
-    name?: string
-    pubkey?: string
-    callback?: string
+  interface PostData {
+    name: string
+    pubkey: string
+    callback: string
   }
-  const data = await request.json<MaybePostData>()
+  const data = await request.json<PostData>()
 
   if (
-    !data.name ||
-    !data.pubkey ||
-    !data.callback ||
-    typeof data.name !== 'string' ||
-    typeof data.pubkey !== 'string' ||
-    typeof data.callback !== 'string'
+    (['name', 'pubkey', 'callback'] as const).some(
+      key => !data[key] || typeof data[key] !== 'string',
+    )
   ) {
     return new Response('invalid request', { status: 400 })
   }

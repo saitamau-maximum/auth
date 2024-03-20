@@ -45,14 +45,9 @@ export default {
         }
 
         if (
-          !param.has('authdata') ||
-          !param.has('iv') ||
-          !param.has('signature') ||
-          !param.has('signatureIv') ||
-          param.getAll('authdata').length !== 1 ||
-          param.getAll('iv').length !== 1 ||
-          param.getAll('signature').length !== 1 ||
-          param.getAll('signatureIv').length !== 1
+          ['authdata', 'iv', 'signature', 'signatureIv'].some(
+            key => !param.has(key) || param.getAll(key).length !== 1,
+          )
         ) {
           return new Response('invalid request', { status: 400 })
         }

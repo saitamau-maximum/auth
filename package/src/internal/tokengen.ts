@@ -42,10 +42,9 @@ export const verifyToken = async (
   const data = new URLSearchParams(tokenData)
 
   if (
-    data.getAll('user').length !== 1 ||
-    data.getAll('pubkey').length !== 1 ||
-    data.getAll('callback').length !== 1 ||
-    data.getAll('time').length !== 1
+    ['user', 'pubkey', 'callback', 'time'].some(
+      key => !data.has(key) || data.getAll(key).length !== 1,
+    )
   )
     return [false, 'invalid token']
 

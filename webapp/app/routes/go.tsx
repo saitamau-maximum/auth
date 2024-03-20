@@ -20,18 +20,9 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   // リクエスト検証
   // TODO: ちゃんとテストを書く
   if (
-    !params.has('name') ||
-    !params.has('pubkey') ||
-    !params.has('callback') ||
-    !params.has('token') ||
-    !params.has('iv') ||
-    !params.has('mac') ||
-    params.getAll('name').length !== 1 ||
-    params.getAll('pubkey').length !== 1 ||
-    params.getAll('callback').length !== 1 ||
-    params.getAll('token').length !== 1 ||
-    params.getAll('iv').length !== 1 ||
-    params.getAll('mac').length !== 1
+    ['name', 'pubkey', 'callback', 'token', 'iv', 'mac'].some(
+      key => !params.has(key) || params.getAll(key).length !== 1,
+    )
   ) {
     throw new Response('invalid request', { status: 400 })
   }
