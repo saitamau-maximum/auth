@@ -2,9 +2,9 @@ import {
   derivePublicKey,
   exportKey,
   importKey,
-  generateGoParam,
   verify,
   sign,
+  handleLogin,
 } from '@saitamau-maximum/auth/internal'
 import type { CookieSerializeOptions } from 'cookie'
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
@@ -16,7 +16,6 @@ export default {
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     ctx: ExecutionContext,
   ): Promise<Response> {
-    const authDomain = new URL(env.AUTH_DOMAIN).origin
     const url = new URL(request.url)
 
     const authName = 'maximum-reverse-proxy'
@@ -189,38 +188,10 @@ export default {
     }
 
     if (!(await checkLoggedIn())) {
-      const callbackUrl = `${url.origin}/auth/callback`
-
-      const redirectData = await fetch(`${authDomain}/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: authName,
-          pubkey: await exportKey(publicKey),
-          callback: callbackUrl,
-        }),
-      }).then(res => res.json<{ token: string; iv: string }>())
-
-      const param = await generateGoParam(
+      return handleLogin(request, {
         authName,
-        await exportKey(publicKey),
-        callbackUrl,
-        atob(redirectData.token),
-        atob(redirectData.iv),
-        privateKey,
-      )
-
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: `${authDomain}/go?${param.toString()}`,
-          'Set-Cookie': serializeCookie('__continue_to', url.href, {
-            ...cookieOptions,
-            maxAge: 60 * 10,
-          }),
-        },
+        privateKey: env.PRIVKEY,
+        authOrigin: env.AUTH_DOMAIN,
       })
     }
 
