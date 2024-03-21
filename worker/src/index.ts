@@ -1,15 +1,16 @@
-import { validateRequest as validateRequestFromProxy } from '@saitamau-maximum/auth'
+import {
+  checkLoggedIn,
+  validateRequest as validateRequestFromProxy,
+} from '@saitamau-maximum/auth'
 import {
   derivePublicKey,
   exportKey,
   importKey,
-  verify,
   sign,
   handleLogin,
   handleLogout,
   handleCallback,
 } from '@saitamau-maximum/auth/internal'
-import { parse as parseCookie } from 'cookie'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
@@ -59,25 +60,7 @@ export default {
     }
 
     // ログインしてない場合はログインページに移動
-    const checkLoggedIn = async () => {
-      const cookie = parseCookie(request.headers.get('Cookie') || '')
-      if (
-        !cookie['__authdata'] ||
-        !cookie['__iv'] ||
-        !cookie['__sign1'] ||
-        !cookie['__sign2']
-      ) {
-        return false
-      }
-
-      // ほんとはいつ認証したかについてもチェックすべきかもだが、
-      // サブリクエスト数が多くなっても困るので簡易的にチェック
-      const authdata = cookie['__authdata']
-      const sig = cookie['__sign2']
-      return await verify(authdata, sig, publicKey)
-    }
-
-    if (!(await checkLoggedIn())) {
+    if (!(await checkLoggedIn(request, publicKey))) {
       return handleLogin(request, {
         authName,
         privateKey: env.PRIVKEY,
