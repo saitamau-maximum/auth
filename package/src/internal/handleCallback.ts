@@ -22,6 +22,96 @@ interface Options {
   privateKey: string
 }
 
+// CSS は webapp の global.css と continue/style.module.css からコピペ
+const cancelHtml = `<!DOCTYPE html>
+<html lang='ja'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel='preconnect' href='https://fonts.googleapis.com' />
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin='anonymous' />
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap' rel='stylesheet' />
+<title>認証をキャンセルしました</title>
+<style>
+html {
+  font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+main {
+  width: 1120px;
+  max-width: 100%;
+  margin: auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+h1 {
+  font-weight: 500;
+  font-size: 2rem;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  margin-top: 64px;
+  margin-bottom: 24px;
+}
+
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  margin: 4px 16px;
+  padding-left: 1em;
+  padding-right: 1em;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  min-width: 8rem;
+  height: 3rem;
+  border-radius: 1.5rem;
+}
+
+.btn:hover,
+.btn:active,
+.btn:focus {
+  text-decoration: underline;
+}
+
+.continueBtn {
+  background: linear-gradient(to left top, #62c077, #34aa8e);
+  color: #ffffff;
+}
+
+.cancelBtn {
+  border: #4bb583 solid 1px;
+  color: #4bb583;
+  background: #ffffff;
+}
+</style>
+</head>
+<body>
+  <main>
+    <h1>Maximum Auth</h1>
+    <p>認証をキャンセルしました。ページにアクセスするにはログインが必要です。</p>
+    <a href='/' class="btn continueBtn">もう一度ログインする</a>
+    <a href='/auth/logout' class="btn cancelBtn">ログアウトする</a>
+  </main>
+</body>
+</html>
+`
+
 export const handleCallback = async (
   request: Request,
   options: Options,
@@ -36,19 +126,16 @@ export const handleCallback = async (
 
   if (param.has('cancel')) {
     // TODO: UI しっかりする
-    return new Response(
-      '認証をキャンセルしました。このページにアクセスするにはログインが必要です。 <a href="/">再ログイン</a><a href="/auth/logout">ログアウト</a>',
-      {
-        status: 401,
-        headers: {
-          'Set-Cookie': serializeCookie('__continue_to', '', {
-            ...cookieOptions,
-            maxAge: -1,
-          }),
-          'Content-Type': 'text/html',
-        },
+    return new Response(cancelHtml, {
+      status: 401,
+      headers: {
+        'Set-Cookie': serializeCookie('__continue_to', '', {
+          ...cookieOptions,
+          maxAge: -1,
+        }),
+        'Content-Type': 'text/html',
       },
-    )
+    })
   }
 
   if (
