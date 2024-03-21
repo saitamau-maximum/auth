@@ -41,7 +41,7 @@ const middleware: PagesFunction<Env> = async context => {
     return new Response('not found', { status: 404 })
   }
 
-  if (!checkLoggedIn(context.request, pubkey)) {
+  if (!(await checkLoggedIn(context.request, pubkey))) {
     return handleLogin(context.request, {
       authName: context.env.AUTH_NAME,
       privateKey: context.env.PRIVKEY,
