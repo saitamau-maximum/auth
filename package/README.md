@@ -9,7 +9,12 @@
 
 ### webapp とのブリッジ (internal)
 
+- `const.ts`: 定数置き場
+- `cookie.ts`: Cookie のオプション
 - `goparam.ts`: webapp の `/go` に送信するクエリパラメータの生成とその検証
+- `handleCallback.ts`: webapp からのリダイレクトを処理する
+- `handleLogin.ts`: ログイン処理
+- `handleLogout.ts`: ログアウト処理
 - `keygen.ts`: 鍵生成のユーティリティ
 - `tokengen.ts`: webapp に送信するトークン生成と検証
 

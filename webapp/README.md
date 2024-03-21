@@ -1,22 +1,17 @@
-# Welcome to Remix!
+# Webapp
 
-- [Remix Docs](https://remix.run/docs)
+<https://auth.maximum.vc/>
 
-## Development
+ローカルで検証したい場合は `.dev.vars` と `webapp/data/pubkey.json` に適当な情報を書いてください (コミットせずに)
 
-You will be utilizing Wrangler for local development to emulate the Cloudflare runtime. This is already wired up in your package.json as the `dev` script:
+## Routes
 
-```sh
-# start the remix dev server and wrangler
-npm run dev
-```
+- `/`: Auth としては使ってないただの説明ページ
+- `/go`: Webapp で認証させる受取先
+- `/continue`: ログイン後のリダイレクト先
+- `/keygen`: 鍵生成
+- `/cb`: GitHub OAuth の Callback
+- `/token`: トークン生成 API
+- `/user`: ユーザー情報取得 API
 
-Open up [http://127.0.0.1:8788](http://127.0.0.1:8788) and you should be ready to go!
-
-## Deployment
-
-Cloudflare Pages are currently only deployable through their Git provider integrations.
-
-If you don't already have an account, then [create a Cloudflare account here](https://dash.cloudflare.com/sign-up/pages) and after verifying your email address with Cloudflare, go to your dashboard and follow the [Cloudflare Pages deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-anything).
-
-Configure the "Build command" should be set to `npm run build`, and the "Build output directory" should be set to `public`.
+フローは Figma 参照。
