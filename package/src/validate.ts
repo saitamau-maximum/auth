@@ -12,8 +12,8 @@ interface Options {
   proxyPubkey?: string
 }
 
-const validateRequest = async (header: Headers, options: Options) => {
-  const proxyPubkey = options.proxyPubkey || PROXY_PUBKEY
+const validateRequest = async (header: Headers, options?: Options) => {
+  const proxyPubkey = options?.proxyPubkey || PROXY_PUBKEY
 
   if (
     [
