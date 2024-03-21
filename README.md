@@ -23,6 +23,9 @@ Maximum の統合認証プラットフォーム
 > GitHub Packages でホストしているため、インストール時には認証が必要。
 > 詳しくは [公式ドキュメント](https://docs.github.com/ja/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages) を参照。
 
+基本的な使い方を書きます。
+Auth 開発時には別オプションを指定できますが、詳しくは実装を見てください。
+
 ### 認証
 
 > [!WARNING]
@@ -52,6 +55,11 @@ const myMiddleware = context => {
 export const onRequest = [authMiddleware, myMiddleware]
 ```
 
+必要な環境変数:
+
+- `AUTH_NAME`: サービスの名前。 webapp に登録している名前を使う。
+- `PRIVKEY`: 秘密鍵。 webapp に登録した公開鍵に対応するものを使う。
+
 #### それ以外のサイト
 
 Workers Routes を使って Reverse Proxy する。
@@ -72,21 +80,37 @@ if (!validation) {
 }
 ```
 
+JS/TS 以外の言語を使いたい場合、 `package/src/validate.ts` を参考にしてください。
+
+### ログイン状態の確認
+
+```javascript
+import { checkLoggedIn } from '@saitamau-maximum/auth'
+
+await checkLoggedIn(request, publicKey)  // => true/false
+```
+
+ユーザー情報の取得と合わせてログイン状態の確認を行うことも可能 (↓)
+
 ### ユーザー情報の取得
 
 ```javascript
 import { getUserInfo } from '@saitamau-maximum/auth'
 
+const options = {
+  authName: "webapp に登録している名前",
+  privateKey: "webapp に登録した公開鍵に対応する秘密鍵",
+}
+
 // ユーザー情報を取得
-// 認証されていなければ null が返るので、これを実行する前に認証されているかチェックすべき
-const user = getUserInfo(context.headers)
+// isLoggedIn が false のとき、 userinfo は null
+const [isLoggedIn, userinfo] = await getUserInfo(request, options)
 ```
+
+### ログイン
+
+サイトにアクセスしたらログインページにリダイレクトされる (...はず)
 
 ### ログアウト
 
-```javascript
-import { getLogoutURL } from '@saitamau-maximum/auth'
-
-// この URL に 302 リダイレクトさせる
-const logoutURL = getLogoutURL()
-```
+`/auth/logout` にアクセスさせる。
