@@ -1,0 +1,44 @@
+name: Validate Public Key Data
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'webapp/data/pubkey.json'
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.5
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install package deps
+        run: pnpm install
+        working-directory: ./package
+
+      - name: Build package
+        run: pnpm build
+        working-directory: ./package
+
+      - name: Install webapp deps
+        run: pnpm install
+        working-directory: ./webapp
+
+      - name: Check
+        run: pnpm test:pubkey
+        working-directory: ./webapp
