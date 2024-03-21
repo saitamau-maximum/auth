@@ -40,6 +40,8 @@ export function ErrorBoundary() {
               {error.status} - {error.statusText}
             </h1>
             <p>{error.data}</p>
+            <p>Are you trying malicious login? 🤔</p>
+            <p>&copy; Maximum - Programming Circle at Saitama University.</p>
           </main>
           <ScrollRestoration />
           <Scripts />
@@ -70,9 +72,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <main>
-          <Outlet />
-        </main>
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

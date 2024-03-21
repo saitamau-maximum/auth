@@ -9,8 +9,10 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   return (
-    <>
-      <p>🚧 WIP</p>
-    </>
+    <main>
+      <h1>Maximum Auth</h1>
+      <p>Aggregated Authentication Platform of Maximum</p>
+      <p>認証が必要なサイトからアクセスしてください。</p>
+    </main>
   )
 }

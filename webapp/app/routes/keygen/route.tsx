@@ -29,7 +29,7 @@ export default function Keygen() {
   const data = useLoaderData<typeof loader>()
 
   return (
-    <>
+    <main>
       <h1>Key Generator</h1>
       <p>
         Maximum Auth
@@ -39,13 +39,13 @@ export default function Keygen() {
         秘密鍵は環境変数に置くなどして公開しないようにしてください。公開鍵は
         saitamau-maximum/auth で必要となるため PR を提出してください。
       </p>
-      <h2>Generated Key:</h2>
+      <h2>Generated Key</h2>
       <h3>Public Key</h3>
       <pre className={style.pre}>{data.pubkey}</pre>
       <h3>Private Key</h3>
       <pre className={style.pre}>{data.privkey}</pre>
       <h3>Symmetric Key</h3>
       <pre className={style.pre}>{data.symkey}</pre>
-    </>
+    </main>
   )
 }

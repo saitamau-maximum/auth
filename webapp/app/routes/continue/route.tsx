@@ -7,6 +7,7 @@ import { json } from '@remix-run/cloudflare'
 import { useLoaderData } from '@remix-run/react'
 
 import { encrypt, importKey, sign } from '@saitamau-maximum/auth/internal'
+import clsx from 'clsx'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
@@ -17,6 +18,8 @@ dayjs.tz.setDefault('Asia/Tokyo')
 
 import pubkeyData from '../../../data/pubkey.json'
 import cookieSessionStorage from '../../../utils/session.server'
+
+import style from './style.module.css'
 
 export const action: ActionFunction = () =>
   new Response('method not allowed', { status: 405 })
@@ -73,25 +76,59 @@ export default function Continue() {
   cancelUrl.searchParams.set('cancel', 'true')
 
   return (
-    <>
-      {data.userdata.id ? (
-        <>
-          <div>
-            <img src={data.userdata.profile_image} alt='Profile' />
-            <span>Logged In as {data.userdata.display_name}</span>
+    <main className={style.main}>
+      <div className={style.container}>
+        <div className={style.left}>
+          <img
+            src='/logo.svg'
+            alt='Maximum Logo'
+            width={200}
+            height={50}
+            className={style.logo}
+          />
+          <div className={style.profile}>
+            <img
+              src={data.userdata.profile_image}
+              alt='Profile'
+              className={style.profileImg}
+            />
+            <p className={style.profileName}>{data.userdata.display_name}</p>
           </div>
-          <div>
-            <span>{data.appdata.name}</span> に移動します。OK？
-            <a href={continueUrl.toString()}>続ける</a>
-            <a href={cancelUrl.toString()}>やっぱりやめる</a>
-          </div>
-        </>
-      ) : (
-        <>
-          <p>Maximum メンバーではないため、続行できません。</p>
-          <a href='to_be_filled'>ログアウトする</a>
-        </>
-      )}
-    </>
+        </div>
+        <div className={style.right}>
+          {data.userdata.is_member ? (
+            <>
+              <p className={style.loginMsg}>以下のサイトにログインします。</p>
+              <p className={style.serviceDetail}>
+                <span className={style.serviceName}>{data.appdata.name}</span>
+                <br />
+                <span className={style.serviceUrl}>({continueUrl.origin})</span>
+              </p>
+              <a
+                href={continueUrl.toString()}
+                className={clsx(style.btn, style.continueBtn)}
+              >
+                続ける
+              </a>
+              <a
+                href={cancelUrl.toString()}
+                className={clsx(style.btn, style.cancelBtn)}
+              >
+                やめる
+              </a>
+            </>
+          ) : (
+            <>
+              <p>
+                Maximum メンバーではないため、
+                <br />
+                続行できません。
+              </p>
+              <p>このタブを閉じてください。</p>
+            </>
+          )}
+        </div>
+      </div>
+    </main>
   )
 }
