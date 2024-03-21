@@ -89,7 +89,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   session.flash('continue_name', encodeURIComponent(params.get('name')!))
   session.flash('continue_to', params.get('callback')!)
 
-  if (session.has('id')) {
+  if (session.get('is_member')) {
     return redirect('/continue', {
       status: 302,
       headers: {

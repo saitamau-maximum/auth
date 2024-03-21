@@ -29,10 +29,11 @@ interface Options {
 // 詳細は webapp/app/routes/continue/route.tsx
 interface UserInfo {
   // webapp/utils/session.server.ts の SessionData
-  id: string | null
-  display_name?: string
-  profile_image?: string
-  teams?: string[]
+  id: string
+  display_name: string
+  profile_image: string
+  teams: string[]
+  is_member: boolean
 
   time: number
 }
@@ -92,7 +93,9 @@ const getUserInfo = async (
     })
 
     if (res.status === 200) {
-      return [true, await res.json()]
+      const data = await res.json<UserInfo>()
+      if (!data.is_member) return [false, null]
+      return [true, data]
     } else {
       console.error(res.status, res.statusText)
       return [false, null]

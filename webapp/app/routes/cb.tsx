@@ -71,14 +71,15 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   )
 
   const isMember = maximumMembers.some(member => member.id === user.id)
+  session.set('id', String(user.id))
+  session.set('display_name', user.login)
+  session.set('profile_image', user.avatar_url)
 
   if (!isMember) {
-    // Maximum メンバーではない場合は id を null にしておく
-    session.set('id', null)
+    session.set('is_member', false)
+    session.set('teams', [])
   } else {
-    session.set('id', String(user.id))
-    session.set('display_name', user.login)
-    session.set('profile_image', user.avatar_url)
+    session.set('is_member', true)
 
     // チーム数およびメンバー数が 100 以下である前提
     // 超える場合には Pagination を用いて取得する必要がある

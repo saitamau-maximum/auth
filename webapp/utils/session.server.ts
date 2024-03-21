@@ -2,10 +2,11 @@ import type { AppLoadContext } from '@remix-run/cloudflare'
 import { createCookieSessionStorage } from '@remix-run/cloudflare'
 
 interface SessionData {
-  id: string | null
+  id: string
   display_name: string
   profile_image: string
   teams: string[]
+  is_member: boolean
 }
 
 interface SessionFlashData {
