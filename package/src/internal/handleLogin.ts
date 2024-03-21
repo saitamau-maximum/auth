@@ -70,7 +70,7 @@ export const handleLogin = async (
   return new Response(null, {
     status: 302,
     headers: {
-      Location: `${options.authOrigin}/go?${param.toString()}`,
+      Location: `${authOrigin}/go?${param.toString()}`,
       'Set-Cookie': serializeCookie('__continue_to', reqUrl.href, {
         ...cookieOptions,
         maxAge: 60 * 10,
