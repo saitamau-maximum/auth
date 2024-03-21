@@ -37,7 +37,7 @@ Cloudflare Pages Functions を使う。
 ビルドで `functions/_middleware.js` (or `.ts`) として出力されるファイルに以下のコードを書く。
 
 > [!TIP]
-> 例えば Next.js や Remix なら `public/functions/_middleware.js` に書く。
+> 例えば Next.js や Remix なら `functions/_middleware.js` に書く。
 
 なお、 export されている `middleware` は Cloudflare Workers, Cloudflare Pages Function (or それらと互換性のあるもの) で使うことを想定しています。
 それ以外の環境では使えない可能性があります。
