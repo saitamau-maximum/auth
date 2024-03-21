@@ -101,6 +101,21 @@ export default {
       },
     })
 
-    return res
+    const newHeader = new Headers(res.headers)
+
+    // Cache-control: private を付加する
+    if (!res.headers.has('Cache-Control')) {
+      newHeader.set('Cache-Control', 'private')
+    } else {
+      newHeader.set(
+        'Cache-Control',
+        'private, ' + res.headers.get('Cache-Control'),
+      )
+    }
+
+    return new Response(res.body, {
+      ...res,
+      headers: newHeader,
+    })
   },
 }
