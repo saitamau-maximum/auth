@@ -10,6 +10,13 @@ import {
   handleCallback,
 } from '@saitamau-maximum/auth/internal'
 import { parse as parseCookie } from 'cookie'
+import dayjs from 'dayjs'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+dayjs.tz.setDefault('Asia/Tokyo')
 
 export default {
   async fetch(
@@ -78,8 +85,9 @@ export default {
       })
     }
 
+    const now = dayjs.tz().valueOf()
     const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-    const mac = await sign(rand, privateKey)
+    const mac = await sign(`${now}___${rand}`, privateKey)
 
     // それ以外の場合は Proxy
     const res = await fetch(url.toString(), {
@@ -87,7 +95,7 @@ export default {
       headers: {
         ...request.headers,
         'X-Maximum-Auth-Pubkey': await exportKey(publicKey),
-        'X-Maximum-Auth-Name': authName,
+        'X-Maximum-Auth-Time': now.toString(),
         'X-Maximum-Auth-Key': rand,
         'X-Maximum-Auth-Mac': mac,
       },

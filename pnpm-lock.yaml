@@ -166,6 +166,9 @@ importers:
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
+      dayjs:
+        specifier: ^1.11.10
+        version: 1.11.10
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20230518.0
