@@ -8,6 +8,11 @@ Maximum の統合認証プラットフォーム
 
 ↑ Maximum の Figma「Auth」に概略を描いてあります。
 
+## 開発手順
+
+[development.md](./development.md) を参照。
+利用方法は以下を参照。
+
 ## 使い方
 
 ### 共通
@@ -50,10 +55,39 @@ const myMiddleware = context => {
 export const onRequest = [authMiddleware, myMiddleware]
 ```
 
-必要な環境変数:
+##### ローカルでの開発
 
-- `AUTH_NAME`: サービスの名前。 webapp に登録している名前を使う。
-- `PRIVKEY`: 秘密鍵。 webapp に登録した公開鍵に対応するものを使う。
+実際には Auth にアクセスせずにローカルのみで動作する、開発用モードがあります。
+環境変数に `IS_DEV=true` を設定すると有効になります。
+**この環境変数はデプロイ時には設定しないでください**。一応内部的にチェックしますが、念のため。
+
+##### デプロイ時の設定
+
+まず、認証に必要な鍵ペアを用意します。
+<https://auth.maximum.vc/keygen> から生成できます。
+一緒に表示されている秘密鍵 (Private Key) と公開鍵 (Public Key) をメモしてください。
+(対称鍵 Symmetric Key は使いません)
+
+生成したら、公開鍵を `webapp` に登録します。
+saitamau-maximum/auth の [webapp/data/pubkey.json](https://github.com/saitamau-maximum/auth/blob/main/webapp/data/pubkey.json) に、ホストするサービス名と公開鍵を追加して、 PR を出してください。
+(何か間違っていれば Actions が落ちて教えてくれます)
+
+```json
+[
+  ...,
+  {
+    "name": "サービスの名前",
+    "pubkey": "公開鍵"
+  }
+]
+```
+
+次に、環境変数を設定します。
+
+- `AUTH_NAME`: サービスの名前
+- `PRIVKEY`: 秘密鍵。登録した公開鍵に対応するものを使う。必ず Encrypt して保存してください。
+
+これでデプロイすれば認証されるようになります。
 
 #### それ以外のサイト
 
@@ -82,7 +116,7 @@ JS/TS 以外の言語を使いたい場合、 `package/src/validate.ts` を参�
 ```javascript
 import { checkLoggedIn } from '@saitamau-maximum/auth'
 
-await checkLoggedIn(request, publicKey)  // => true/false
+await checkLoggedIn(request, publicKey) // => true/false
 ```
 
 ユーザー情報の取得と合わせてログイン状態の確認を行うことも可能 (↓)
@@ -93,8 +127,8 @@ await checkLoggedIn(request, publicKey)  // => true/false
 import { getUserInfo } from '@saitamau-maximum/auth'
 
 const options = {
-  authName: "webapp に登録している名前",
-  privateKey: "webapp に登録した公開鍵に対応する秘密鍵",
+  authName: 'webapp に登録している名前',
+  privateKey: 'webapp に登録した公開鍵に対応する秘密鍵',
 }
 
 // ユーザー情報を取得
