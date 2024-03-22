@@ -118,6 +118,13 @@ export const handleLogout = async (request: Request): Promise<Response> => {
   )
   newHeader.append(
     'Set-Cookie',
+    serializeCookie('__sign3', '', {
+      ...cookieOptions,
+      maxAge: -1,
+    }),
+  )
+  newHeader.append(
+    'Set-Cookie',
     serializeCookie('__continue_to', '', {
       ...cookieOptions,
       maxAge: -1,

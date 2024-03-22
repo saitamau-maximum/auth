@@ -530,6 +530,36 @@ describe('prod mode', () => {
     ).toBeTruthy()
   })
 
+  it("adds '__sign3' cookie", async () => {
+    const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+
+    const param = new URLSearchParams()
+    param.set('authdata', 'test1')
+    param.set('iv', 'test2')
+    param.set('signature', await sign('test1', authPrivkey))
+    param.set('signatureIv', await sign('test2', authPrivkey))
+    const req = new Request(
+      'http://localhost/auth/callback?' + param.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Cookie: '__continue_to=http://localhost/',
+        },
+      },
+    )
+    const res = await handleCallback(req, {
+      authName: 'test',
+      privateKey: TEST_PRIVKEY,
+    })
+    expect(res.headers.has('Set-Cookie')).toBeTruthy()
+    const cookie = cookieParser(res.headers.get('Set-Cookie')!)
+    expect(cookie.has('__sign3')).toBeTruthy()
+    const testPubkey = await importKey(TEST_PUBKEY, 'publicKey')
+    expect(
+      await verify('test2', cookie.get('__sign3')![0], testPubkey),
+    ).toBeTruthy()
+  })
+
   it("redirects to '__continue_to'", async () => {
     const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
 

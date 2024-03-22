@@ -23,12 +23,13 @@ export const action: ActionFunction = async ({ request, context }) => {
     data: string
     iv: string
     sgn1: string // Our hash
-    sgn2: string // Their hash
+    sgn2: string // Their data hash
+    sgn3: string // Their iv hash
   }
   const data = await request.json<PostData>()
 
   if (
-    (['name', 'pubkey', 'data', 'iv', 'sgn1', 'sgn2'] as const).some(
+    (['name', 'pubkey', 'data', 'iv', 'sgn1', 'sgn2', 'sgn3'] as const).some(
       key => !data[key] || typeof data[key] !== 'string',
     )
   ) {
@@ -52,7 +53,8 @@ export const action: ActionFunction = async ({ request, context }) => {
 
   if (
     !(await verify(data.data!, data.sgn1!, ourPubkey)) ||
-    !(await verify(data.data!, data.sgn2!, theirPubkey))
+    !(await verify(data.data!, data.sgn2!, theirPubkey)) ||
+    !(await verify(data.iv!, data.sgn3!, theirPubkey))
   ) {
     throw new Response('invalid request', { status: 400 })
   }

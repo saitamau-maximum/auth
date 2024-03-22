@@ -66,7 +66,8 @@ const checkLoggedIn = async (
     !cookie['__authdata'] ||
     !cookie['__iv'] ||
     !cookie['__sign1'] ||
-    !cookie['__sign2']
+    !cookie['__sign2'] ||
+    !cookie['__sign3']
   ) {
     return false
   }
@@ -74,8 +75,13 @@ const checkLoggedIn = async (
   // ほんとはいつ認証したかについてもチェックすべきかもだが、
   // サブリクエスト数が多くなっても困るので簡易的にチェック
   const authdata = cookie['__authdata']
+  const iv = cookie['__iv']
   const sig = cookie['__sign2']
-  return await verify(authdata, sig, publicKey)
+  const sigIv = cookie['__sign3']
+  return (
+    (await verify(authdata, sig, publicKey)) &&
+    (await verify(iv, sigIv, publicKey))
+  )
 }
 
 const getUserInfo = async (
@@ -118,6 +124,7 @@ const getUserInfo = async (
       iv: cookie['__iv'],
       sgn1: cookie['__sign1'],
       sgn2: cookie['__sign2'],
+      sgn3: cookie['__sign3'],
     }
 
     const authOrigin = options.authOrigin || AUTH_DOMAIN

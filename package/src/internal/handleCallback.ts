@@ -233,6 +233,14 @@ export const handleCallback = async (
       cookieOptions,
     ),
   )
+  newHeader.append(
+    'Set-Cookie',
+    serializeCookie(
+      '__sign3',
+      await sign(param.get('iv')!, privateKey),
+      cookieOptions,
+    ),
+  )
   newHeader.set('Location', continueUrl || '/')
 
   return new Response(null, {
