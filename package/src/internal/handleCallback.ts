@@ -20,6 +20,10 @@ interface Options {
    * [saitamau-maximum/auth](https://github.com/saitamau-maximum/auth) に登録している公開鍵と対応したものを使用する
    */
   privateKey: string
+  /**
+   * Dev mode
+   */
+  dev?: boolean
 }
 
 // CSS は webapp の global.css と continue/style.module.css からコピペ
@@ -125,7 +129,6 @@ export const handleCallback = async (
   const param = new URL(request.url).searchParams
 
   if (param.has('cancel')) {
-    // TODO: UI しっかりする
     return new Response(cancelHtml, {
       status: 401,
       headers: {
@@ -135,6 +138,37 @@ export const handleCallback = async (
         }),
         'Content-Type': 'text/html',
       },
+    })
+  }
+
+  if (options.dev) {
+    const reqUrl = new URL(request.url)
+
+    if (reqUrl.hostname !== 'localhost') {
+      throw new Error(
+        'dev mode では localhost からのリクエストのみ受け付けます',
+      )
+    }
+
+    const headers = new Headers()
+    headers.append(
+      'Set-Cookie',
+      serializeCookie('__continue_to', '', { ...cookieOptions, maxAge: -1 }),
+    )
+    headers.append(
+      'Set-Cookie',
+      serializeCookie('__dev_logged_in', 'true', cookieOptions),
+    )
+
+    const cookieData = request.headers.get('Cookie')
+    if (!cookieData) {
+      return new Response('invalid request', { status: 400 })
+    }
+    const continueUrl = parseCookie(cookieData)['__continue_to']
+    headers.set('Location', continueUrl || '/')
+    return new Response(null, {
+      status: 302,
+      headers,
     })
   }
 

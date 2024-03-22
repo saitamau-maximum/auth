@@ -12,6 +12,7 @@ interface Env {
   PRIVKEY: string
   AUTH_DOMAIN?: string
   AUTH_PUBKEY?: string
+  IS_DEV?: string
 }
 
 const middleware: PagesFunction<Env> = async context => {
@@ -24,6 +25,7 @@ const middleware: PagesFunction<Env> = async context => {
   const reqUrl = new URL(context.request.url)
   const privkey = await importKey(context.env.PRIVKEY, 'privateKey')
   const pubkey = await derivePublicKey(privkey)
+  const isDev = context.env.IS_DEV === 'true'
 
   if (reqUrl.pathname.startsWith('/auth/')) {
     if (reqUrl.pathname === '/auth/callback') {
@@ -31,11 +33,21 @@ const middleware: PagesFunction<Env> = async context => {
         authName: context.env.AUTH_NAME,
         privateKey: context.env.PRIVKEY,
         authPubkey: context.env.AUTH_PUBKEY,
+        dev: isDev,
       })
     }
 
     if (reqUrl.pathname === '/auth/logout') {
       return handleLogout(context.request)
+    }
+
+    if (isDev && reqUrl.pathname === '/auth/login') {
+      return handleLogin(context.request, {
+        authName: context.env.AUTH_NAME,
+        privateKey: context.env.PRIVKEY,
+        authOrigin: context.env.AUTH_DOMAIN,
+        dev: isDev,
+      })
     }
 
     return new Response('not found', { status: 404 })
@@ -46,6 +58,7 @@ const middleware: PagesFunction<Env> = async context => {
       authName: context.env.AUTH_NAME,
       privateKey: context.env.PRIVKEY,
       authOrigin: context.env.AUTH_DOMAIN,
+      dev: isDev,
     })
   }
 

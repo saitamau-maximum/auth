@@ -1,4 +1,7 @@
 import { parse as parseCookie } from 'cookie'
+import dayjs from 'dayjs'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
 
 import {
   AUTH_DOMAIN,
@@ -7,6 +10,10 @@ import {
   importKey,
   verify,
 } from './internal'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+dayjs.tz.setDefault('Asia/Tokyo')
 
 interface Options {
   /**
@@ -24,6 +31,10 @@ interface Options {
    * [saitamau-maximum/auth](https://github.com/saitamau-maximum/auth) に登録している公開鍵と対応したものを使用する
    */
   privateKey: string
+  /**
+   * Dev mode
+   */
+  dev?: boolean
 }
 
 // 詳細は webapp/app/routes/continue/route.tsx
@@ -38,8 +49,18 @@ interface UserInfo {
   time: number
 }
 
-const checkLoggedIn = async (request: Request, publicKey: CryptoKey) => {
+const checkLoggedIn = async (
+  request: Request,
+  publicKey: CryptoKey | null,
+  isDev?: boolean,
+) => {
   const cookie = parseCookie(request.headers.get('Cookie') || '')
+
+  if (isDev) {
+    return !!cookie['__dev_logged_in']
+  } else if (publicKey === null) {
+    throw new Error('publicKey が null です')
+  }
 
   if (
     !cookie['__authdata'] ||
@@ -65,6 +86,23 @@ const getUserInfo = async (
     if (!options[key]) {
       throw new Error(`options.${key} は必須です`)
     }
+  }
+
+  if (options.dev) {
+    if (!(await checkLoggedIn(request, null, true))) {
+      return [false, null]
+    }
+
+    const DUMMY_USERDATA: UserInfo = {
+      id: '120705481',
+      display_name: 'saitamau-maximum',
+      is_member: true,
+      profile_image: 'https://avatars.githubusercontent.com/u/120705481?v=4',
+      teams: ['leaders'],
+      time: dayjs.tz().valueOf(),
+    }
+
+    return [true, DUMMY_USERDATA]
   }
 
   const privateKey = await importKey(options.privateKey, 'privateKey')

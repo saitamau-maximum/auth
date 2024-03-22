@@ -31,6 +31,7 @@ export default {
     const authName = 'Maximum Reverse Proxy'
     const privateKey = await importKey(env.PRIVKEY, 'privateKey')
     const publicKey = await derivePublicKey(privateKey)
+    const dev = env.IS_DEV === 'true'
 
     // Auth Routes
     if (url.pathname.startsWith('/auth/')) {
@@ -40,12 +41,22 @@ export default {
           authName,
           privateKey: env.PRIVKEY,
           authPubkey: env.AUTH_PUBKEY,
+          dev,
         })
       }
 
       // Logout
       if (url.pathname === '/auth/logout') {
         return handleLogout(request)
+      }
+
+      if (dev && url.pathname === '/auth/login') {
+        return handleLogin(request, {
+          authName,
+          privateKey: env.PRIVKEY,
+          authOrigin: env.AUTH_DOMAIN,
+          dev,
+        })
       }
 
       return new Response('not found', { status: 404 })
@@ -60,11 +71,12 @@ export default {
     }
 
     // ログインしてない場合はログインページに移動
-    if (!(await checkLoggedIn(request, publicKey))) {
+    if (!(await checkLoggedIn(request, publicKey, dev))) {
       return handleLogin(request, {
         authName,
         privateKey: env.PRIVKEY,
         authOrigin: env.AUTH_DOMAIN,
+        dev,
       })
     }
 

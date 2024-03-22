@@ -123,6 +123,14 @@ export const handleLogout = async (request: Request): Promise<Response> => {
       maxAge: -1,
     }),
   )
+  newHeader.append(
+    'Set-Cookie',
+    serializeCookie('__dev_logged_in', '', {
+      ...cookieOptions,
+      maxAge: -1,
+    }),
+  )
+  newHeader.set('Content-Type', 'text/html')
 
   return new Response(logoutHtml, {
     status: 200,
