@@ -17,21 +17,9 @@ it('has the correct schema', () => {
 
 it('has the correct pubkey', async () => {
   for (const item of data) {
-    expect(
-      await importKey(item.pubkey, 'publicKey')
-        .then(() => true)
-        .catch(() => false),
-    ).toBeTruthy()
-    expect(
-      await importKey(item.pubkey, 'privateKey')
-        .then(() => true)
-        .catch(() => false),
-    ).toBeFalsy()
-    expect(
-      await importKey(item.pubkey, 'symmetric')
-        .then(() => true)
-        .catch(() => false),
-    ).toBeFalsy()
+    await expect(importKey(item.pubkey, 'publicKey')).resolves.toBeDefined()
+    await expect(importKey(item.pubkey, 'privateKey')).rejects.toThrow()
+    await expect(importKey(item.pubkey, 'symmetric')).rejects.toThrow()
     const key = await importKey(item.pubkey, 'publicKey')
     expect(key.algorithm.name).toBe('ECDSA')
     expect(key.usages).toContain('verify')
