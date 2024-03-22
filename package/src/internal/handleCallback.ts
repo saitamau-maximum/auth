@@ -150,6 +150,11 @@ export const handleCallback = async (
       )
     }
 
+    const cookieData = request.headers.get('Cookie')
+    if (!cookieData) {
+      return new Response('invalid request', { status: 400 })
+    }
+
     const headers = new Headers()
     headers.append(
       'Set-Cookie',
@@ -160,10 +165,6 @@ export const handleCallback = async (
       serializeCookie('__dev_logged_in', 'true', cookieOptions),
     )
 
-    const cookieData = request.headers.get('Cookie')
-    if (!cookieData) {
-      return new Response('invalid request', { status: 400 })
-    }
     const continueUrl = parseCookie(cookieData)['__continue_to']
     headers.set('Location', continueUrl || '/')
     return new Response(null, {
@@ -177,6 +178,11 @@ export const handleCallback = async (
       key => !param.has(key) || param.getAll(key).length !== 1,
     )
   ) {
+    return new Response('invalid request', { status: 400 })
+  }
+
+  const cookieData = request.headers.get('Cookie')
+  if (!cookieData) {
     return new Response('invalid request', { status: 400 })
   }
 
@@ -195,11 +201,6 @@ export const handleCallback = async (
     !(await verify(param.get('iv')!, param.get('signatureIv')!, authPubkey))
   ) {
     return new Response('invalid signature', { status: 400 })
-  }
-
-  const cookieData = request.headers.get('Cookie')
-  if (!cookieData) {
-    return new Response('invalid request', { status: 400 })
   }
 
   const continueUrl = parseCookie(cookieData)['__continue_to']
