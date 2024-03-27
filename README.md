@@ -136,6 +136,10 @@ const options = {
 const [isLoggedIn, userinfo] = await getUserInfo(request, options)
 ```
 
+> [!WARNING]
+> `@saitamau-maximum/auth`を使う場合は必ずサーバーサイドで行ってください。
+> 秘匿情報は必ずクライアント側へ露出しないよう、細心の注意を払ってください。
+
 ### ログイン
 
 サイトにアクセスしたらログインページにリダイレクトされる (...はず)
