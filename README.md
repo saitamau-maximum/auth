@@ -132,8 +132,8 @@ const options = {
 }
 
 // ユーザー情報を取得
-// isLoggedIn が false のとき、 userinfo は null
-const [isLoggedIn, userinfo] = await getUserInfo(request, options)
+// ログインしていないとき、 userinfo は null になる
+const userinfo = await getUserInfo(request, options)
 ```
 
 > [!WARNING]

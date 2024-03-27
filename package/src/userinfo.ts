@@ -87,7 +87,7 @@ const checkLoggedIn = async (
 const getUserInfo = async (
   request: Request,
   options: Options,
-): Promise<[boolean, UserInfo | null]> => {
+): Promise<UserInfo | null> => {
   for (const key of ['authName', 'privateKey'] as const) {
     if (!options[key]) {
       throw new Error(`options.${key} は必須です`)
@@ -96,7 +96,7 @@ const getUserInfo = async (
 
   if (options.dev) {
     if (!(await checkLoggedIn(request, null, true))) {
-      return [false, null]
+      return null
     }
 
     const DUMMY_USERDATA: UserInfo = {
@@ -108,7 +108,7 @@ const getUserInfo = async (
       time: dayjs.tz().valueOf(),
     }
 
-    return [true, DUMMY_USERDATA]
+    return DUMMY_USERDATA
   }
 
   const privateKey = await importKey(options.privateKey, 'privateKey')
@@ -139,14 +139,14 @@ const getUserInfo = async (
 
     if (res.status === 200) {
       const data = await res.json<UserInfo>()
-      if (!data.is_member) return [false, null]
-      return [true, data]
+      if (!data.is_member) return null
+      return data
     } else {
       console.error(res.status, res.statusText)
-      return [false, null]
+      return null
     }
   }
-  return [false, null]
+  return null
 }
 
 export { UserInfo, checkLoggedIn, getUserInfo }
