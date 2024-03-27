@@ -3,6 +3,7 @@ import {
   handleCallback,
   handleLogin,
   handleLogout,
+  handleMe,
   importKey,
 } from './internal'
 import { checkLoggedIn } from './userinfo'
@@ -43,6 +44,15 @@ const middleware: PagesFunction<Env> = async context => {
 
     if (isDev && reqUrl.pathname === '/auth/login') {
       return handleLogin(context.request, {
+        authName: context.env.AUTH_NAME,
+        privateKey: context.env.PRIVKEY,
+        authOrigin: context.env.AUTH_DOMAIN,
+        dev: isDev,
+      })
+    }
+
+    if (reqUrl.pathname === '/auth/me') {
+      return handleMe(context.request, {
         authName: context.env.AUTH_NAME,
         privateKey: context.env.PRIVKEY,
         authOrigin: context.env.AUTH_DOMAIN,

@@ -140,6 +140,14 @@ const userinfo = await getUserInfo(request, options)
 > `@saitamau-maximum/auth`を使う場合は必ずサーバーサイドで行ってください。
 > 秘匿情報は必ずクライアント側へ露出しないよう、細心の注意を払ってください。
 
+クライアントサイドで取得する場合
+
+```javascript
+import { getUserInfo_client } from '@saitamau-maximum/auth'
+
+const userinfo = await getUserInfo_client()
+```
+
 ### ログイン
 
 サイトにアクセスしたらログインページにリダイレクトされる (...はず)

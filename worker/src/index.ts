@@ -10,6 +10,7 @@ import {
   handleLogin,
   handleLogout,
   handleCallback,
+  handleMe,
 } from '@saitamau-maximum/auth/internal'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
@@ -52,6 +53,15 @@ export default {
 
       if (dev && url.pathname === '/auth/login') {
         return handleLogin(request, {
+          authName,
+          privateKey: env.PRIVKEY,
+          authOrigin: env.AUTH_DOMAIN,
+          dev,
+        })
+      }
+
+      if (url.pathname === '/auth/me') {
+        return handleMe(request, {
           authName,
           privateKey: env.PRIVKEY,
           authOrigin: env.AUTH_DOMAIN,
