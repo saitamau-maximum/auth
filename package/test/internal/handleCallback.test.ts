@@ -9,6 +9,8 @@ import {
   verify,
 } from '../../src/internal/keygen'
 
+import { cookieParser, removesCookie } from './cookieUtil'
+
 vi.mock('../../src/internal/const', async importOriginal => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const mod = await importOriginal<typeof import('../../src/internal/const')>()
@@ -27,41 +29,6 @@ const TEST_PUBKEY =
 
 const TEST_PRIVKEY =
   'eyJrdHkiOiJFQyIsImtleV9vcHMiOlsic2lnbiJdLCJleHQiOnRydWUsImNydiI6IlAtNTIxIiwieCI6IkFmRVhoOTY5VTRxMUo3RDNZQlBpMFY2ODlPdUFaOVJGZS1STHRhSFE4QmUwTEQ2LWQ5dlJ1ZEFFMnlHTE10Z0lMX1drekhSRF9TNjg2M1BkUUZKLTJydnEiLCJ5IjoiQUtpZ0Ftd2FPcF9Vd3V2NXZqOEE4UXFjS2Z3WG42enZNUHU3QWhOdkFDdE5qdC1UdTBvRWg3d0Z5dGJDR3FNaFRYMm01SEJnZlZhbTh5aTRMWkRiSWlYcCIsImQiOiJBVVJnWGpLazBtaDlsbDdtVDZvRDJTT09TZEF1bWpITFQtOU1pZnRsd1VNOGpiTlNRMkJxOVlBemNvVkZRRmV5VzEzbVNzY3dUT0dUbTRxZ1QwWDJnV1VmIn0='
-
-// Memo: Cloudflare Types で型推論されてしまうが、テスト時は jsdom なので Web Standard に従う
-const cookieParser = (cookieString: string) => {
-  const mp = new Map<string, [string, Map<string, string>]>()
-  const cookies = cookieString.split(',').map(c => c.trim())
-  for (const cookie of cookies) {
-    const [keyval, ...opts] = cookie.split(';')
-    const [key, val] = keyval.split('=')
-    const optMap = new Map<string, string>()
-    for (const opt of opts) {
-      if (!opt.includes('=')) {
-        optMap.set(decodeURIComponent(opt.trim()), '')
-        continue
-      }
-      const [optKey, optVal] = opt.split('=')
-      optMap.set(
-        decodeURIComponent(optKey.trim()),
-        decodeURIComponent(optVal.trim()),
-      )
-    }
-    mp.set(decodeURIComponent(key), [decodeURIComponent(val), optMap])
-  }
-  return mp
-}
-
-const removesCookie = (
-  cookie: ReturnType<typeof cookieParser>,
-  key: string,
-) => {
-  if (!cookie.has(key)) return false
-  const [val, opts] = cookie.get(key)!
-  return (
-    val === '' && opts.has('Max-Age') && parseInt(opts.get('Max-Age')!) <= 0
-  )
-}
 
 describe('required options missing', () => {
   it('throws when options.authName is not provided', async () => {
@@ -191,6 +158,7 @@ describe('dev mode', () => {
       privateKey: 'test',
       dev: true,
     })
+    expect(res.status).toBe(302)
     expect(res.headers.has('Location')).toBeTruthy()
     expect(res.headers.get('Location')).toBe('http://localhost/hoge')
   })
@@ -207,6 +175,7 @@ describe('dev mode', () => {
       privateKey: 'test',
       dev: true,
     })
+    expect(res.status).toBe(302)
     expect(res.headers.has('Location')).toBeTruthy()
     expect(res.headers.get('Location')).toBe('/')
   })
