@@ -4,3 +4,7 @@ webapp/.wrangler
 webapp/public/build
 webapp/functions
 worker/.wrangler
+
+# [!NOTE] とかがうまくフォーマットされないので、一旦無効化
+# ref: https://github.com/prettier/prettier/issues/9099#issuecomment-1850233237
+README.md
