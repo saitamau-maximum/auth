@@ -27,6 +27,12 @@ export default {
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     ctx: ExecutionContext,
   ): Promise<Response> {
+    for (const key of ['PRIVKEY', 'AUTH_DOMAIN', 'AUTH_PUBKEY'] as const) {
+      if (!env[key]) {
+        throw new Error(`env.${key} は必須です`)
+      }
+    }
+
     const url = new URL(request.url)
 
     const authName = 'Maximum Reverse Proxy'
