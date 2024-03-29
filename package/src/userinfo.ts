@@ -115,7 +115,8 @@ const getUserInfo = async (
   const publicKey = await derivePublicKey(privateKey)
 
   if (await checkLoggedIn(request, publicKey)) {
-    const cookie = parseCookie(request.headers.get('Cookie') || '')
+    // checkLoggedIn で Cookie があることを前提としている
+    const cookie = parseCookie(request.headers.get('Cookie')!)
 
     const postData = {
       name: options.authName,
