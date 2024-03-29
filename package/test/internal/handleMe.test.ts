@@ -79,7 +79,7 @@ describe('prod mode', () => {
     mockedFetch = vi
       .spyOn(global, 'fetch')
       .mockImplementation(async (path, options) => {
-        // webapp/app/routes/token.tsx
+        // webapp/app/routes/user.tsx
         if (
           path === 'https://auth.server.test/user' ||
           path === 'https://auth.maximum.vc/user'
