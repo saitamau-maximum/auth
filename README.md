@@ -26,6 +26,10 @@ Maximum の統合認証プラットフォーム
 基本的な使い方を書きます。
 Auth 開発時には別オプションを指定できますが、詳しくは実装を見てください。
 
+> [!WARNING]
+> これらの処理はサーバーサイドで行い、秘匿情報をクライアント側に送信しないようにしてください。
+> クライアントサイドで行うと秘密鍵などが漏洩して大変なことになります。
+
 ### 認証
 
 > [!WARNING]
@@ -136,17 +140,8 @@ const options = {
 const userinfo = await getUserInfo(request, options)
 ```
 
-> [!WARNING]
-> `@saitamau-maximum/auth`を使う場合は必ずサーバーサイドで行ってください。
-> 秘匿情報は必ずクライアント側へ露出しないよう、細心の注意を払ってください。
-
-クライアントサイドで取得する場合
-
-```javascript
-import { getUserInfo_client } from '@saitamau-maximum/auth'
-
-const userinfo = await getUserInfo_client()
-```
+クライアントサイドで取得する場合、 `/auth/me` にリクエストを送ってください。
+秘密鍵など漏洩の可能性があるため、 `getUserInfo` は使わないようにしてください。
 
 ### ログイン
 
