@@ -149,12 +149,4 @@ const getUserInfo = async (
   return null
 }
 
-const getUserInfo_client = async () => {
-  const res = await fetch('/auth/me')
-  if (res.status === 200) {
-    return res.json<UserInfo>()
-  }
-  return null
-}
-
-export { UserInfo, checkLoggedIn, getUserInfo, getUserInfo_client }
+export { UserInfo, checkLoggedIn, getUserInfo }
