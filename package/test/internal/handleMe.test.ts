@@ -5,8 +5,8 @@ import utc from 'dayjs/plugin/utc'
 import type { MockInstance } from 'vitest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { importKey, sign } from '../../src/internal'
 import { handleMe } from '../../src/internal/handleMe'
+import { importKey, sign } from '../../src/internal/keygen'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
