@@ -8,9 +8,9 @@ export const meta: MetaFunction = () => {
     { title: TITLE },
     { name: 'robots', content: 'noindex, nofollow' },
     { name: 'description', content: DESCRIPTION },
-    { name: 'og:title', content: TITLE },
-    { name: 'og:description', content: DESCRIPTION },
-    { name: 'og:image', content: IMAGE },
+    { property: 'og:title', content: TITLE },
+    { property: 'og:description', content: DESCRIPTION },
+    { property: 'og:image', content: IMAGE },
   ]
 }
 
