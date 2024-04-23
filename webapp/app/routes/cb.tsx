@@ -67,7 +67,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
 
   const { data: maximumMembers } = await appOctokit.request(
     'GET /orgs/{org}/members',
-    { org: 'saitamau-maximum' },
+    { org: 'saitamau-maximum', per_page: 100 },
   )
 
   const isMember = maximumMembers.some(member => member.id === user.id)
