@@ -65,12 +65,15 @@ export const loader: LoaderFunction = async ({ context, request }) => {
 
   const { data: user } = await userOctokit.request('GET /user')
 
-  const { data: maximumMembers } = await appOctokit.request(
-    'GET /orgs/{org}/members',
-    { org: 'saitamau-maximum', per_page: 100 },
+  const checkIsOrgUserRes = await appOctokit.request(
+    'GET /orgs/{org}/members/{username}',
+    {
+      org: 'saitamau-maximum',
+      username: user.login,
+    },
   )
 
-  const isMember = maximumMembers.some(member => member.id === user.id)
+  const isMember = (checkIsOrgUserRes.status as number) === 204
   session.set('id', String(user.id))
   session.set('display_name', user.login)
   session.set('profile_image', user.avatar_url)
