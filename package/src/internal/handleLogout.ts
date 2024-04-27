@@ -2,6 +2,12 @@ import { serialize as serializeCookie } from 'cookie'
 
 import { cookieOptions } from './cookie'
 
+const usedCharacters = Array.from(
+  new Set(
+    ['Maximum Auth', 'Dev Mode Login', '続ける', 'やめる'].join('').split(''),
+  ),
+).join('')
+
 // CSS は webapp の global.css と continue/style.module.css からコピペ
 const logoutHtml = `<!DOCTYPE html>
 <html lang='ja'>
@@ -10,7 +16,7 @@ const logoutHtml = `<!DOCTYPE html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <link rel='preconnect' href='https://fonts.googleapis.com' />
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin='anonymous' />
-<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap' rel='stylesheet' />
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap&text=${usedCharacters}' rel='stylesheet' />
 <title>ログアウト</title>
 <style>
 html {

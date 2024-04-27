@@ -13,6 +13,31 @@ import {
 
 import './global.css'
 
+const usedCharacters = Array.from(
+  new Set(
+    [
+      // 英数字記号
+      '0123456789 - abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.?:/🤔',
+      // _index/route.tsx
+      'Maximum Auth',
+      'Aggregated Authentication Platform of Maximum',
+      '認証が必要なサイトからアクセスしてください。',
+      // continue/route.tsx
+      '以下のサイトにログインします。',
+      '続ける',
+      'やめる',
+      'Maximum メンバーではないため、続行できません。',
+      'このタブを閉じてください。',
+      // keygen/route.tsx
+      'Key Generator',
+      'Maximum Auth 向けの公開鍵・秘密鍵を生成します。再読み込みすると新しく生成されます。',
+      '秘密鍵は環境変数に置くなどして公開しないようにしてください。公開鍵は saitamau-maximum/auth で必要となるため PR を提出してください。',
+    ]
+      .join('')
+      .split(''),
+  ),
+).join('')
+
 export function ErrorBoundary() {
   const error = useRouteError()
   if (isRouteErrorResponse(error)) {
@@ -28,7 +53,7 @@ export function ErrorBoundary() {
             crossOrigin='anonymous'
           />
           <link
-            href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap'
+            href={`https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap&text=${usedCharacters}`}
             rel='stylesheet'
           />
           <Meta />
@@ -65,7 +90,7 @@ export default function App() {
           crossOrigin='anonymous'
         />
         <link
-          href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap'
+          href={`https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap&text=${usedCharacters}`}
           rel='stylesheet'
         />
         <Meta />

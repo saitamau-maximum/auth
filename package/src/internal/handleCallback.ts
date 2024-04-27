@@ -26,6 +26,19 @@ interface Options {
   dev?: boolean
 }
 
+const usedCharacters = Array.from(
+  new Set(
+    [
+      'Maximum Auth',
+      '認証をキャンセルしました。ページにアクセスするにはログインが必要です。',
+      'もう一度ログインする',
+      'ログアウトする',
+    ]
+      .join('')
+      .split(''),
+  ),
+).join('')
+
 // CSS は webapp の global.css と continue/style.module.css からコピペ
 const cancelHtml = `<!DOCTYPE html>
 <html lang='ja'>
@@ -34,7 +47,7 @@ const cancelHtml = `<!DOCTYPE html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <link rel='preconnect' href='https://fonts.googleapis.com' />
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin='anonymous' />
-<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap' rel='stylesheet' />
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap&text=${usedCharacters}' rel='stylesheet' />
 <title>認証をキャンセルしました</title>
 <style>
 html {

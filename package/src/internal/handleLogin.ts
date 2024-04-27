@@ -5,6 +5,19 @@ import { cookieOptions } from './cookie'
 import { generateGoParam } from './goparam'
 import { derivePublicKey, exportKey, importKey } from './keygen'
 
+const usedCharacters = Array.from(
+  new Set(
+    [
+      'Maximum Auth',
+      'ログアウトしました。再度ページにアクセスするにはログインが必要です。',
+      'ログインしない場合は、このタブを閉じてください。',
+      'もう一度ログインする',
+    ]
+      .join('')
+      .split(''),
+  ),
+).join('')
+
 // CSS は webapp の global.css と continue/style.module.css からコピペ
 const devLoginHtml = `<!DOCTYPE html>
 <html lang='ja'>
@@ -13,7 +26,7 @@ const devLoginHtml = `<!DOCTYPE html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <link rel='preconnect' href='https://fonts.googleapis.com' />
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin='anonymous' />
-<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap' rel='stylesheet' />
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap&text=${usedCharacters}' rel='stylesheet' />
 <title>ログイン (Dev)</title>
 <style>
 html {
