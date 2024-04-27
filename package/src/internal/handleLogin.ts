@@ -7,14 +7,7 @@ import { derivePublicKey, exportKey, importKey } from './keygen'
 
 const usedCharacters = Array.from(
   new Set(
-    [
-      'Maximum Auth',
-      'ログアウトしました。再度ページにアクセスするにはログインが必要です。',
-      'ログインしない場合は、このタブを閉じてください。',
-      'もう一度ログインする',
-    ]
-      .join('')
-      .split(''),
+    ['Maximum Auth', 'Dev Mode Login', '続ける', 'やめる'].join('').split(''),
   ),
 ).join('')
 
@@ -26,7 +19,7 @@ const devLoginHtml = `<!DOCTYPE html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <link rel='preconnect' href='https://fonts.googleapis.com' />
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin='anonymous' />
-<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Sans:wght@400;500&display=swap&text=${usedCharacters}' rel='stylesheet' />
+<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap&text=${usedCharacters}' rel='stylesheet' />
 <title>ログイン (Dev)</title>
 <style>
 html {
