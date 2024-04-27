@@ -37,6 +37,19 @@ export default async function handleRequest(
   }
 
   responseHeaders.set('Content-Type', 'text/html')
+
+  // Security Headers
+  responseHeaders.set(
+    'Content-Security-Policy',
+    "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://avatars.githubusercontent.com; script-src 'self' 'unsafe-inline'",
+  )
+  responseHeaders.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; preload', // 1 year
+  )
+  responseHeaders.set('X-Content-Type-Options', 'nosniff')
+  responseHeaders.set('X-Frame-Options', 'DENY')
+
   return new Response(body, {
     headers: responseHeaders,
     status: responseStatusCode,
