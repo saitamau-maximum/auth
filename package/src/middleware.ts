@@ -19,7 +19,7 @@ interface Env {
 const middleware: PagesFunction<Env> = async context => {
   for (const key of ['AUTH_NAME', 'PRIVKEY'] as const) {
     if (!context.env[key]) {
-      throw new Error(`context.env.${key} は必須です`)
+      return new Response(`context.env.${key} は必須です`, { status: 500 })
     }
   }
 
