@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
@@ -12,7 +11,6 @@ dayjs.extend(timezone)
 dayjs.tz.setDefault('Asia/Tokyo')
 
 vi.mock('../src/internal', async importOriginal => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const mod = await importOriginal<typeof import('../src/internal')>()
   return {
     ...mod,

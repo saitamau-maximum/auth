@@ -116,6 +116,7 @@ const getUserInfo = async (
 
   if (await checkLoggedIn(request, publicKey)) {
     // checkLoggedIn で Cookie があることを前提としている
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const cookie = parseCookie(request.headers.get('Cookie')!)
 
     const postData = {

@@ -2,4 +2,3 @@ packages:
   - 'package'
   - 'webapp'
   - 'worker'
-  - 'checker'

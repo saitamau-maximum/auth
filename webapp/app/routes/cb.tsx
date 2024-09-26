@@ -75,7 +75,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
       },
     )
     isMember = (checkIsOrgMemberRes.status as number) === 204
-  } catch (e) {
+  } catch (_) {
     isMember = false
   }
   session.set('id', String(user.id))

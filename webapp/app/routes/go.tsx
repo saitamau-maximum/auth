@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import type { LoaderFunction, ActionFunction } from '@remix-run/cloudflare'
 import { redirect } from '@remix-run/cloudflare'
 
@@ -54,7 +56,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   let theirPubkey: CryptoKey
   try {
     theirPubkey = await importKey(registeredData.pubkey, 'publicKey')
-  } catch (e) {
+  } catch (_) {
     throw new Response('invalid pubkey', { status: 400 })
   }
   if (!theirPubkey.usages.includes('verify'))
