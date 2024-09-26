@@ -42,8 +42,7 @@ export const verifyMac = async (
   const baseParam = generateGoParamBase(name, pubkey, callback, token, iv)
   try {
     return await verify(baseParam.toString(), mac, trustedPubkey)
-  } catch (e) {
-    console.error(e)
+  } catch (_) {
     return false
   }
 }
