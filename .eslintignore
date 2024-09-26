@@ -1,7 +1,0 @@
-node_modules
-dist
-webapp/functions
-webapp/public/build
-webapp/.cache
-webapp/.wrangler
-webapp/coverage
