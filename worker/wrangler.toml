@@ -1,6 +1,6 @@
 name = "saitamau-maximum-auth-proxy-worker"
 main = "src/index.ts"
-compatibility_date = "2024-02-23"
+compatibility_date = "2024-09-02"
 workers_dev = false
 
 [vars]
