@@ -24,6 +24,7 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   {
     plugins: {
+      '@typescript-eslint': tseslint.plugin,
       'unused-imports': unusedImports,
       import: importPlugin,
       'sort-exports': sortExports,
@@ -72,6 +73,15 @@ export default tseslint.config(
         {
           sortDir: 'asc',
           sortExportKindFirst: 'value',
+        },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
         },
       ],
     },

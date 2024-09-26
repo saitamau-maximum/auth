@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 // Memo: Cloudflare Types で型推論されてしまうが、テスト時は jsdom なので Web Standard に従う
 const cookieParser = (cookieString: string) => {
   const mp = new Map<string, [string, Map<string, string>]>()

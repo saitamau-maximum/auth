@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
+
 import { describe, expect, it, vi } from 'vitest'
 
 import { handleCallback } from '../../src/internal/handleCallback'
@@ -12,7 +13,6 @@ import {
 import { cookieParser, removesCookie } from './cookieUtil'
 
 vi.mock('../../src/internal/const', async importOriginal => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const mod = await importOriginal<typeof import('../../src/internal/const')>()
   return {
     ...mod,

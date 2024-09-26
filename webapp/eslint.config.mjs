@@ -15,8 +15,6 @@ export default tseslint.config(
   },
   eslint.configs.recommended,
   ...rootConfig,
-  react.configs.flat.recommended,
-  react.configs.flat['jsx-runtime'],
   {
     languageOptions: {
       globals: {
@@ -48,6 +46,8 @@ export default tseslint.config(
       ],
       'import/resolver': { typescript: {} },
     },
+    ...react.configs.flat.recommended,
+    ...react.configs.flat['jsx-runtime'],
   },
   {
     // typescript

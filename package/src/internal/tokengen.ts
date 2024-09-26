@@ -36,6 +36,7 @@ export const verifyToken = async (
   try {
     decrypted = await decrypt(token, key, iv)
   } catch (e) {
+    console.error(e)
     return [false, 'invalid token']
   }
   const tokenData = atob(decrypted)

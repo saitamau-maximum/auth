@@ -43,6 +43,7 @@ export const verifyMac = async (
   try {
     return await verify(baseParam.toString(), mac, trustedPubkey)
   } catch (e) {
+    console.error(e)
     return false
   }
 }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
 
 import { AUTH_PUBKEY } from './const'
@@ -207,8 +209,8 @@ export const handleCallback = async (
 
   if (
     !(await verify(
-      param.get('authdata')!,
-      param.get('signature')!,
+      param.get('authdata') as string,
+      param.get('signature') as string,
       authPubkey,
     )) ||
     !(await verify(param.get('iv')!, param.get('signatureIv')!, authPubkey))

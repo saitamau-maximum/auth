@@ -24,8 +24,7 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    ctx: ExecutionContext,
+    _ctx: ExecutionContext,
   ): Promise<Response> {
     for (const key of ['PRIVKEY', 'AUTH_DOMAIN', 'AUTH_PUBKEY'] as const) {
       if (!env[key]) {
