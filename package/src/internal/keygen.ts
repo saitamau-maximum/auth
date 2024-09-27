@@ -1,18 +1,21 @@
+// jose の ES512 と同じオプション
 const keypairGenAlgorithm = {
   name: 'ECDSA',
   namedCurve: 'P-521',
 }
-const keypairHashAlgorithm = {
-  name: 'ECDSA',
-  hash: 'SHA-512',
-}
 const keypairUsage = ['sign', 'verify']
 
+// jose の A256GCMKW と同じオプション
 const symmetricGenAlgorithm = {
   name: 'AES-GCM',
   length: 256,
 }
 const symmetricUsage = ['encrypt', 'decrypt']
+
+const keypairHashAlgorithm = {
+  name: 'ECDSA',
+  hash: 'SHA-512',
+}
 
 const generateKeyPair = () =>
   crypto.subtle.generateKey(
@@ -29,7 +32,7 @@ const generateSymmetricKey = () =>
   ) as Promise<CryptoKey>
 
 const exportKey = async (key: CryptoKey) => {
-  const exportedKey = await crypto.subtle.exportKey('jwk', key)
+  const exportedKey = (await crypto.subtle.exportKey('jwk', key)) as JsonWebKey
   return btoa(JSON.stringify(exportedKey))
 }
 
@@ -38,7 +41,6 @@ const importKey = async (
   type: 'publicKey' | 'privateKey' | 'symmetric',
 ) => {
   const keyData = JSON.parse(atob(data))
-
   if (type === 'symmetric') {
     return crypto.subtle.importKey(
       'jwk',
@@ -47,17 +49,17 @@ const importKey = async (
       true,
       symmetricUsage,
     )
-  } else {
-    return crypto.subtle.importKey(
-      'jwk',
-      keyData,
-      keypairGenAlgorithm,
-      true,
-      type === 'publicKey' ? ['verify'] : ['sign'],
-    )
   }
+  return crypto.subtle.importKey(
+    'jwk',
+    keyData,
+    keypairGenAlgorithm,
+    true,
+    type === 'publicKey' ? ['verify'] : ['sign'],
+  )
 }
 
+// jose には存在しない
 const derivePublicKey = async (privateKey: CryptoKey) => {
   const publicKey = (await crypto.subtle.exportKey(
     'jwk',
@@ -130,7 +132,6 @@ const decrypt = async (data: string, key: CryptoKey, iv: string) => {
     ),
   )
 }
-
 export {
   decrypt,
   derivePublicKey,
