@@ -1,65 +1,68 @@
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
+import { EncryptJWT, jwtDecrypt } from 'jose'
 
-import { decrypt, encrypt } from './keygen'
+import { symmetricProtectedHeader } from './keygen'
 
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
-
-export const generateToken = async (
-  name: string,
-  pubkey: string,
-  callback: string,
-  key: CryptoKey,
-) => {
-  const now = dayjs.tz().valueOf()
-  const param = new URLSearchParams()
-  param.set('user', name)
-  param.set('pubkey', pubkey)
-  param.set('callback', callback)
-  param.set('time', String(now))
-  const tokenData = btoa(param.toString())
-  return await encrypt(tokenData, key)
+interface ITokenPayload {
+  name: string
+  pubkey: string
+  callback: string
 }
 
-export const verifyToken = async (
-  name: string,
-  pubkey: string,
-  callback: string,
-  key: CryptoKey,
-  token: string,
-  iv: string,
-): Promise<[boolean, string]> => {
-  let decrypted: string
-  try {
-    decrypted = await decrypt(token, key, iv)
-  } catch (_) {
-    return [false, 'invalid token']
-  }
-  const tokenData = atob(decrypted)
-  const data = new URLSearchParams(tokenData)
+const subj = 'Maximum Auth Token'
+const aud = 'maximum-auth'
+const iss = 'maximum-auth'
+
+export const generateToken = async ({
+  name,
+  pubkey,
+  callback,
+  symkey,
+}: {
+  name: string
+  pubkey: string
+  callback: string
+  symkey: CryptoKey
+}) => {
+  return await new EncryptJWT({ name, pubkey, callback })
+    .setSubject(subj)
+    .setAudience(aud)
+    .setIssuer(iss)
+    .setNotBefore('0 sec')
+    .setIssuedAt()
+    .setExpirationTime('10 sec')
+    .setProtectedHeader(symmetricProtectedHeader)
+    .encrypt(symkey)
+}
+
+export const verifyToken = async ({
+  name,
+  pubkey,
+  callback,
+  symkey,
+  token,
+}: {
+  name: string | null
+  pubkey: string | null
+  callback: string | null
+  symkey: CryptoKey
+  token: string | null
+}): Promise<[boolean, string]> => {
+  if (!name || !pubkey || !callback || !token) return [false, 'invalid request']
+
+  const { payload } = await jwtDecrypt<ITokenPayload>(token, symkey, {
+    subject: subj,
+    audience: aud,
+    issuer: iss,
+    clockTolerance: 5,
+  }).catch(() => ({ payload: null }))
+  if (!payload) return [false, 'invalid token']
 
   if (
-    ['user', 'pubkey', 'callback', 'time'].some(
-      key => !data.has(key) || data.getAll(key).length !== 1,
-    )
+    payload.name !== name ||
+    payload.pubkey !== pubkey ||
+    payload.callback !== callback
   )
     return [false, 'invalid token']
-
-  const user = data.get('user')
-  if (user !== name) return [false, 'user mismatch']
-
-  const pubkeyData = data.get('pubkey')
-  if (pubkeyData !== pubkey) return [false, 'pubkey mismatch']
-
-  const callbackData = data.get('callback')
-  if (callbackData !== callback) return [false, 'callback mismatch']
-
-  const time = data.get('time')
-  if (dayjs.tz().diff(dayjs.tz(Number(time)), 'millisecond') > 10000)
-    return [false, 'token expired']
 
   return [true, 'valid token']
 }

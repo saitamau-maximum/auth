@@ -3,11 +3,7 @@
 import type { LoaderFunction, ActionFunction } from '@remix-run/cloudflare'
 import { redirect } from '@remix-run/cloudflare'
 
-import {
-  importKey,
-  verifyToken,
-  verifyMac,
-} from '@saitamau-maximum/auth/internal'
+import { importKey, verifyToken } from '@saitamau-maximum/auth/internal'
 
 import pubkeyData from '../../data/pubkey.json'
 import cookieSessionStorage from '../../utils/session.server'
@@ -22,7 +18,7 @@ export const loader: LoaderFunction = async ({ context, request }) => {
   // リクエスト検証
   // TODO: ちゃんとテストを書く
   if (
-    ['name', 'pubkey', 'callback', 'token', 'iv', 'mac'].some(
+    ['name', 'pubkey', 'callback', 'token'].some(
       key => !params.has(key) || params.getAll(key).length !== 1,
     )
   ) {
@@ -53,52 +49,27 @@ export const loader: LoaderFunction = async ({ context, request }) => {
     throw new Response('invalid request', { status: 400 })
   }
 
-  let theirPubkey: CryptoKey
   try {
-    theirPubkey = await importKey(registeredData.pubkey, 'publicKey')
+    await importKey(registeredData.pubkey, 'publicKey')
   } catch (_) {
     throw new Response('invalid pubkey', { status: 400 })
   }
-  if (!theirPubkey.usages.includes('verify'))
-    throw new Response('invalid pubkey', { status: 400 })
-
-  const macVerifyResult = await verifyMac(
-    params.get('name')!,
-    params.get('pubkey')!,
-    params.get('callback')!,
-    params.get('token')!,
-    params.get('iv')!,
-    params.get('mac')!,
-    theirPubkey,
-  )
-  if (!macVerifyResult) throw new Response('invalid mac', { status: 400 })
 
   const key = await importKey(envvar.SYMKEY, 'symmetric')
-  const [verifyResult, message] = await verifyToken(
-    params.get('name')!,
-    params.get('pubkey')!,
-    params.get('callback')!,
-    key,
-    params.get('token')!,
-    params.get('iv')!,
-  )
-
-  if (!verifyResult) throw new Response(message, { status: 400 })
+  const [isvalid, message] = await verifyToken({
+    name: params.get('name'),
+    pubkey: params.get('pubkey'),
+    callback: params.get('callback'),
+    symkey: key,
+    token: params.get('token'),
+  })
+  if (!isvalid) throw new Response(message, { status: 400 })
 
   const { getSession, commitSession } = cookieSessionStorage(envvar)
 
   const session = await getSession(request.headers.get('Cookie'))
   session.flash('continue_name', encodeURIComponent(params.get('name')!))
   session.flash('continue_to', params.get('callback')!)
-
-  if (session.get('is_member')) {
-    return redirect('/continue', {
-      status: 302,
-      headers: {
-        'Set-Cookie': await commitSession(session),
-      },
-    })
-  }
 
   // ref: https://docs.github.com/ja/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
   const oauthUrl = new URL('https://github.com/login/oauth/authorize')

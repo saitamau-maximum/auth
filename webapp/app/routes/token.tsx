@@ -36,17 +36,17 @@ export const action: ActionFunction = async ({ request, context }) => {
   }
 
   const key = await importKey(context.cloudflare.env.SYMKEY, 'symmetric')
-  const [token, iv] = await generateToken(
-    data.name,
-    data.pubkey,
-    data.callback,
-    key,
-  )
+  const token = await generateToken({
+    name: data.name,
+    pubkey: data.pubkey,
+    callback: data.callback,
+    symkey: key,
+  })
 
-  return new Response(JSON.stringify({ token: btoa(token), iv: btoa(iv) }), {
+  return new Response(token, {
     status: 200,
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'text/plain',
     },
   })
 }

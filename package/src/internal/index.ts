@@ -7,15 +7,16 @@ export {
   generateKeyPair,
   generateSymmetricKey,
   importKey,
+  kaypairProtectedHeader,
   keypairGenAlgorithm,
   keypairHashAlgorithm,
   keypairUsage,
   sign,
   symmetricGenAlgorithm,
+  symmetricProtectedHeader,
   symmetricUsage,
   verify,
 } from './keygen'
-export { generateGoParam, verifyMac } from './goparam'
 export { generateToken, verifyToken } from './tokengen'
 export { handleCallback } from './handleCallback'
 export { handleLogin } from './handleLogin'

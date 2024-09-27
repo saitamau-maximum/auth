@@ -4,6 +4,9 @@ const keypairGenAlgorithm = {
   namedCurve: 'P-521',
 }
 const keypairUsage = ['sign', 'verify']
+const kaypairProtectedHeader = {
+  alg: 'ES512',
+}
 
 // jose の A256GCMKW と同じオプション
 const symmetricGenAlgorithm = {
@@ -11,6 +14,10 @@ const symmetricGenAlgorithm = {
   length: 256,
 }
 const symmetricUsage = ['encrypt', 'decrypt']
+const symmetricProtectedHeader = {
+  alg: 'dir',
+  enc: 'A256GCM',
+}
 
 const keypairHashAlgorithm = {
   name: 'ECDSA',
@@ -140,11 +147,13 @@ export {
   generateKeyPair,
   generateSymmetricKey,
   importKey,
+  kaypairProtectedHeader,
   keypairGenAlgorithm,
   keypairHashAlgorithm,
   keypairUsage,
   sign,
   symmetricGenAlgorithm,
+  symmetricProtectedHeader,
   symmetricUsage,
   verify,
 }
