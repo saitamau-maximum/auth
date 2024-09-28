@@ -49,7 +49,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     .setIssuer('maximum-auth')
     .setNotBefore('0 sec')
     .setIssuedAt()
-    .setExpirationTime('10 sec')
+    .setExpirationTime('5 min')
     .setProtectedHeader(keypairProtectedHeader)
     .sign(privkey)
 
