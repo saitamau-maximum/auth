@@ -1,14 +1,12 @@
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
+// jsdom だと TextEncoder と Uint8Array の互換性がないみたいなので node でテストする (挙動は同じ...はず)
+// https://github.com/vitest-dev/vitest/issues/4043
+// @vitest-environment node
+
+import { SignJWT } from 'jose'
 import { expect, it, vi } from 'vitest'
 
-import { importKey, sign } from '../src/internal'
+import { importKey, keypairProtectedHeader } from '../src/internal'
 import { validateRequest } from '../src/validate'
-
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
 
 vi.mock('../src/internal', async importOriginal => {
   const mod = await importOriginal<typeof import('../src/internal')>()
@@ -28,16 +26,34 @@ const TEST_PUBKEY =
 const TEST_PRIVKEY =
   'eyJrdHkiOiJFQyIsImtleV9vcHMiOlsic2lnbiJdLCJleHQiOnRydWUsImNydiI6IlAtNTIxIiwieCI6IkFiaUVFeUExRk1YZkZJVjdKeHNIVFcyZUFzU19ZZWdIb0JadEdsWmhkX0l2VUsyZmstekQteHRIZmFBREpxcjV1YkxMNnliLU1LS2R5LTVIb0Z1UjRDdXUiLCJ5IjoiQWV0Yi1IQ2NfSGxoUnFGMU9KR1JpWDEteWlpOUlIc2sxSU9udnVxejl5T1RZbDhqUi1zUzR6RGlHejgwSVhydkJtc081T0R2aWFsWDdROXpyeTBxZUtJZCIsImQiOiJBRjgtRHJSbmFabjhkRVppV2ozR2owY3F3VWlWNFp3NmhyX2EyT1FfbzMxQmVVNUc3RXhpQmV1dzcyemx5RVlCMGpXTWZKYUZzeUVhdU50UmFKY045cFJNIn0='
 
+const generateToken = async ({
+  subject = 'Maximum Auth Proxy',
+  issuer = 'maximum-auth-proxy',
+  exp = '5 sec',
+  privateKey,
+}: {
+  subject?: string
+  issuer?: string
+  exp?: string
+  privateKey: CryptoKey
+}) => {
+  let jwt = new SignJWT({})
+    .setNotBefore('0 sec')
+    .setIssuedAt()
+    .setProtectedHeader(keypairProtectedHeader)
+  if (subject) jwt = jwt.setSubject(subject)
+  if (issuer) jwt = jwt.setIssuer(issuer)
+  if (exp) jwt = jwt.setExpirationTime(exp)
+  return await jwt.sign(privateKey)
+}
+
 it("returns false if 'X-Maximum-Auth-Pubkey' is missing", async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+  const privateKey = await importKey(TEST_PRIVKEY, 'privateKey')
+  const token = await generateToken({ privateKey })
 
   const header = new Headers()
   // header.set('X-Maximum-Auth-Pubkey',TEST_PUBKEY)
-  header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
+  header.set('X-Maximum-Auth-Token', token)
 
   const res = await validateRequest(header, {
     proxyPubkey: TEST_PUBKEY,
@@ -45,50 +61,13 @@ it("returns false if 'X-Maximum-Auth-Pubkey' is missing", async () => {
   expect(res).toBe(false)
 })
 
-it("returns false if 'X-Maximum-Auth-Time' is missing", async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+it("returns false if 'X-Maximum-Auth-Token' is missing", async () => {
+  // const privateKey = await importKey(TEST_PRIVKEY, 'privateKey')
+  // const token = await generateToken({ privateKey})
 
   const header = new Headers()
   header.set('X-Maximum-Auth-Pubkey', TEST_PUBKEY)
-  // header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
-
-  const res = await validateRequest(header, {
-    proxyPubkey: TEST_PUBKEY,
-  })
-  expect(res).toBe(false)
-})
-
-it("returns false if 'X-Maximum-Auth-Key' is missing", async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
-
-  const header = new Headers()
-  header.set('X-Maximum-Auth-Pubkey', TEST_PUBKEY)
-  header.set('X-Maximum-Auth-Time', time)
-  // header.set('X-Maximum-Auth-Key', rand)
-  header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
-
-  const res = await validateRequest(header, {
-    proxyPubkey: TEST_PUBKEY,
-  })
-  expect(res).toBe(false)
-})
-
-it("returns false if 'X-Maximum-Auth-Mac' is missing", async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  // const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
-
-  const header = new Headers()
-  header.set('X-Maximum-Auth-Pubkey', TEST_PUBKEY)
-  header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  // header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
+  // header.set('X-Maximum-Auth-Token', token)
 
   const res = await validateRequest(header, {
     proxyPubkey: TEST_PUBKEY,
@@ -97,15 +76,12 @@ it("returns false if 'X-Maximum-Auth-Mac' is missing", async () => {
 })
 
 it("returns false if 'X-Maximum-Auth-Pubkey' doesn't match proxyPubkey", async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+  const privateKey = await importKey(TEST_PRIVKEY, 'privateKey')
+  const token = await generateToken({ privateKey })
 
   const header = new Headers()
   header.set('X-Maximum-Auth-Pubkey', TEST_PUBKEY)
-  header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
+  header.set('X-Maximum-Auth-Token', token)
 
   const res = await validateRequest(header, {
     proxyPubkey: TEST_PUBKEY + 'hoge',
@@ -113,16 +89,13 @@ it("returns false if 'X-Maximum-Auth-Pubkey' doesn't match proxyPubkey", async (
   expect(res).toBe(false)
 })
 
-it('returns false if more than 15 secs have passed', async () => {
-  const time = dayjs.tz().add(-16, 'second').valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+it("returns false if issuer doesn't match", async () => {
+  const privateKey = await importKey(TEST_PRIVKEY, 'privateKey')
+  const token = await generateToken({ privateKey, issuer: 'test' })
 
   const header = new Headers()
   header.set('X-Maximum-Auth-Pubkey', TEST_PUBKEY)
-  header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
+  header.set('X-Maximum-Auth-Token', token)
 
   const res = await validateRequest(header, {
     proxyPubkey: TEST_PUBKEY,
@@ -130,19 +103,13 @@ it('returns false if more than 15 secs have passed', async () => {
   expect(res).toBe(false)
 })
 
-it("returns false if the MAC doesn't match", async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+it("returns false if subject doesn't match", async () => {
+  const privateKey = await importKey(TEST_PRIVKEY, 'privateKey')
+  const token = await generateToken({ privateKey, subject: 'test' })
 
   const header = new Headers()
   header.set('X-Maximum-Auth-Pubkey', TEST_PUBKEY)
-  header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  header.set(
-    'X-Maximum-Auth-Mac',
-    await sign(`${time}___${rand}_hoge`, privkey),
-  )
+  header.set('X-Maximum-Auth-Token', token)
 
   const res = await validateRequest(header, {
     proxyPubkey: TEST_PUBKEY,
@@ -150,35 +117,32 @@ it("returns false if the MAC doesn't match", async () => {
   expect(res).toBe(false)
 })
 
-it('returns true if the all conditions match', async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+it('returns false if token expired', async () => {
+  const privateKey = await importKey(TEST_PRIVKEY, 'privateKey')
+  const token = await generateToken({ privateKey, exp: '1 sec' })
 
   const header = new Headers()
   header.set('X-Maximum-Auth-Pubkey', TEST_PUBKEY)
-  header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
+  header.set('X-Maximum-Auth-Token', token)
+
+  // tolerance 5 sec + 1 sec -> 余裕もって 7 秒待つ
+  await new Promise(resolve => setTimeout(resolve, 7000))
 
   const res = await validateRequest(header, {
     proxyPubkey: TEST_PUBKEY,
   })
-  expect(res).toBe(true)
-})
+  expect(res).toBe(false)
+}, 10000)
 
 it('fallbacks to PROXY_PUBKEY if proxyPubkey is not provided', async () => {
-  const time = dayjs.tz().valueOf().toString()
-  const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-  const privkey = await importKey(TEST_PROXYPRIVKEY, 'privateKey')
+  const privateKey = await importKey(TEST_PROXYPRIVKEY, 'privateKey')
+  const token = await generateToken({ privateKey })
   const pubkey =
     'eyJrdHkiOiJFQyIsImtleV9vcHMiOlsidmVyaWZ5Il0sImV4dCI6dHJ1ZSwiY3J2IjoiUC01MjEiLCJ4IjoiQVB0MUFSd253eU82WGZEcWFNNFU2SGRRSnlDTUdnUk5wQkwxSXdjdmRfdVRNc3NqMmRCT3VDakFKQ1BRc2VFdVl5blZXdXN6Yi1UM2REQ29ROTlyeVo2NSIsInkiOiJBRjZHd19weTRrZ0xzRUQ2bHlWOVlEd0tTZm1saHQtUHFqSjZ2cXZxZlNmRnhHVG9VR3ZGOHk0OVByclowS3dlM213MFB1cFRHQ0dpLXl5UFpCd1pGenRJIn0='
 
   const header = new Headers()
   header.set('X-Maximum-Auth-Pubkey', pubkey)
-  header.set('X-Maximum-Auth-Time', time)
-  header.set('X-Maximum-Auth-Key', rand)
-  header.set('X-Maximum-Auth-Mac', await sign(`${time}___${rand}`, privkey))
+  header.set('X-Maximum-Auth-Token', token)
 
   const res = await validateRequest(header)
   expect(res).toBe(true)

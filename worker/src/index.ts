@@ -6,15 +6,16 @@ import {
   derivePublicKey,
   exportKey,
   importKey,
-  sign,
   handleLogin,
   handleLogout,
   handleCallback,
   handleMe,
+  keypairProtectedHeader,
 } from '@saitamau-maximum/auth/internal'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
+import { SignJWT } from 'jose'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -100,9 +101,14 @@ export default {
       })
     }
 
-    const now = dayjs.tz().valueOf()
-    const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-    const mac = await sign(`${now}___${rand}`, privateKey)
+    const token = await new SignJWT({})
+      .setSubject('Maximum Auth Proxy')
+      .setIssuer('maximum-auth-proxy')
+      .setNotBefore('0 sec')
+      .setIssuedAt()
+      .setExpirationTime('5 sec')
+      .setProtectedHeader(keypairProtectedHeader)
+      .sign(privateKey)
 
     // それ以外の場合は Proxy
     const res = await fetch(url.toString(), {
@@ -110,9 +116,7 @@ export default {
       headers: {
         ...request.headers,
         'X-Maximum-Auth-Pubkey': await exportKey(publicKey),
-        'X-Maximum-Auth-Time': now.toString(),
-        'X-Maximum-Auth-Key': rand,
-        'X-Maximum-Auth-Mac': mac,
+        'X-Maximum-Auth-Token': token,
       },
     })
 
