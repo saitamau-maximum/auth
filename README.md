@@ -115,16 +115,6 @@ if (!validation) {
 
 JS/TS 以外の言語を使いたい場合、 `package/src/validate.ts` を参考にしてください。
 
-### ログイン状態の確認
-
-```javascript
-import { checkLoggedIn } from '@saitamau-maximum/auth'
-
-await checkLoggedIn(request, publicKey) // => true/false
-```
-
-ユーザー情報の取得と合わせてログイン状態の確認を行うことも可能 (↓)
-
 ### ユーザー情報の取得
 
 ```javascript
@@ -141,7 +131,7 @@ const userinfo = await getUserInfo(request, options)
 ```
 
 クライアントサイドで取得する場合、 `/auth/me` にリクエストを送ってください。
-秘密鍵など漏洩の可能性があるため、 `getUserInfo` は使わないようにしてください。
+秘密鍵など漏洩の可能性があるため、クライアントサイドで `getUserInfo` は使わないようにしてください。
 
 ### ログイン
 

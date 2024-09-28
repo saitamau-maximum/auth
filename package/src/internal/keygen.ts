@@ -4,7 +4,7 @@ const keypairGenAlgorithm = {
   namedCurve: 'P-521',
 }
 const keypairUsage = ['sign', 'verify']
-const kaypairProtectedHeader = {
+const keypairProtectedHeader = {
   alg: 'ES512',
 }
 
@@ -147,9 +147,9 @@ export {
   generateKeyPair,
   generateSymmetricKey,
   importKey,
-  kaypairProtectedHeader,
   keypairGenAlgorithm,
   keypairHashAlgorithm,
+  keypairProtectedHeader,
   keypairUsage,
   sign,
   symmetricGenAlgorithm,

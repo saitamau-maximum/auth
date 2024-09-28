@@ -179,14 +179,15 @@ export const handleLogin = async (
       pubkey: await exportKey(pubkey),
       callback: callbackUrl,
     }),
-  })
-    .then(res => res.text())
-    .catch(() => {
-      throw new Error('auth server error', {
-        cause:
-          'authName or privateKey is incorrect. The auth server might be down.',
-      })
+  }).then(res => {
+    if (res.ok) {
+      return res.text()
+    }
+    throw new Error('auth server error', {
+      cause:
+        'authName or privateKey is incorrect. The auth server might be down.',
     })
+  })
 
   const param = new URLSearchParams()
   param.set('name', options.authName)

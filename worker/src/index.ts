@@ -1,5 +1,5 @@
 import {
-  checkLoggedIn,
+  getUserInfo,
   validateRequest as validateRequestFromProxy,
 } from '@saitamau-maximum/auth'
 import {
@@ -86,7 +86,12 @@ export default {
     }
 
     // ログインしてない場合はログインページに移動
-    if (!(await checkLoggedIn(request, publicKey, dev))) {
+    const userData = await getUserInfo(request, {
+      authName,
+      privateKey: env.PRIVKEY,
+      dev,
+    })
+    if (!userData) {
       return handleLogin(request, {
         authName,
         privateKey: env.PRIVKEY,

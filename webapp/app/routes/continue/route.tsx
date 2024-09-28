@@ -2,21 +2,18 @@
 
 import type {
   ActionFunction,
-  LoaderFunction,
+  LoaderFunctionArgs,
   MetaFunction,
 } from '@remix-run/cloudflare'
 import { json } from '@remix-run/cloudflare'
 import { useLoaderData } from '@remix-run/react'
 
-import { encrypt, importKey, sign } from '@saitamau-maximum/auth/internal'
+import {
+  importKey,
+  keypairProtectedHeader,
+} from '@saitamau-maximum/auth/internal'
 import clsx from 'clsx'
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
-
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
+import { SignJWT } from 'jose'
 
 import pubkeyData from '../../../data/pubkey.json'
 import cookieSessionStorage from '../../../utils/session.server'
@@ -26,13 +23,13 @@ import style from './style.module.css'
 export const action: ActionFunction = () =>
   new Response('method not allowed', { status: 405 })
 
-export const loader: LoaderFunction = async ({ context, request }) => {
+export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const envvar = context.cloudflare.env
 
   const { getSession } = cookieSessionStorage(envvar)
   const session = await getSession(request.headers.get('Cookie'))
 
-  const cburl = session.get('continue_to')
+  const cburl = session.get('continue_to')!
   const cbname = decodeURIComponent(session.get('continue_name')!)
 
   const registeredData = pubkeyData.find(data => data.name === cbname)
@@ -41,22 +38,25 @@ export const loader: LoaderFunction = async ({ context, request }) => {
     throw new Response('invalid request', { status: 400 })
   }
 
-  const symkey = await importKey(context.cloudflare.env.SYMKEY, 'symmetric')
   const privkey = await importKey(context.cloudflare.env.PRIVKEY, 'privateKey')
-  const [authdata, iv] = await encrypt(
-    JSON.stringify({ ...session.data, time: dayjs.tz().valueOf() }),
-    symkey,
-  )
-  const signature = await sign(authdata, privkey)
-  const signatureIv = await sign(iv, privkey)
+
+  // SessionFlashData は残ってないので、 session.data に残るのは SessionData のみ
+  // state: cb.tsx / continue_to, continue_name: この上で取得した際に消える
+  // Subject, Audience, Issuer は handleCallback にそろえる
+  const jwt = await new SignJWT(session.data)
+    .setSubject('Maximum Auth Data')
+    .setAudience(registeredData.name)
+    .setIssuer('maximum-auth')
+    .setNotBefore('0 sec')
+    .setIssuedAt()
+    .setExpirationTime('10 sec')
+    .setProtectedHeader(keypairProtectedHeader)
+    .sign(privkey)
 
   return json({
     userdata: session.data,
     appdata: { ...registeredData, callback: cburl },
-    authdata,
-    iv,
-    signature,
-    signatureIv,
+    token: jwt,
   })
 }
 
@@ -70,11 +70,8 @@ export const meta: MetaFunction = () => {
 export default function Continue() {
   const data = useLoaderData<typeof loader>()
   const continueUrl = new URL(data.appdata.callback)
-  continueUrl.searchParams.set('authdata', data.authdata)
-  continueUrl.searchParams.set('iv', data.iv)
-  continueUrl.searchParams.set('signature', data.signature)
-  continueUrl.searchParams.set('signatureIv', data.signatureIv)
   const cancelUrl = new URL(data.appdata.callback)
+  continueUrl.searchParams.set('token', data.token)
   cancelUrl.searchParams.set('cancel', 'true')
 
   return (

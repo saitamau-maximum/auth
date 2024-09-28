@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
+// jsdom だと TextEncoder と Uint8Array の互換性がないみたいなので node でテストする (挙動は同じ...はず)
+// https://github.com/vitest-dev/vitest/issues/4043
+// @vitest-environment node
+
 import type { MockInstance } from 'vitest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -119,15 +123,13 @@ describe('prod mode', () => {
           expect(data.name).toBeTypeOf('string')
           expect(data.pubkey).toBeTypeOf('string')
           expect(data.callback).toBeTypeOf('string')
-          return new Response(
-            JSON.stringify({ token: btoa('token'), iv: btoa('iv') }),
-            {
-              status: 200,
-              headers: {
-                'Content-Type': 'application/json',
-              },
+
+          return new Response('DUMMY_TOKEN', {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/plain',
             },
-          )
+          })
         }
 
         if (path === 'https://auth.server.test.dummy/token') {
@@ -191,17 +193,13 @@ describe('prod mode', () => {
     expect(params.get('name')).toBe('test')
 
     // expect(params.get('pubkey')).toBe(TEST_PUBKEY)
-    // 鍵の key の順番が違うせい？でうまくいかないので値として等しいかチェック
+    // derivePubkey で鍵の key の順番が違うせい？でうまくいかないので値として等しいかチェック
     expect(await importKey(TEST_PUBKEY, 'publicKey')).toEqual(
       await importKey(params.get('pubkey')!, 'publicKey'),
     )
 
     expect(params.get('callback')).toBe('https://example.com/auth/callback')
-    expect(params.get('token')).toBe('token')
-    expect(params.get('iv')).toBe('iv')
-
-    // めんどくさいので mac の値自体は検証しない
-    expect(params.get('mac')).toBeTruthy()
+    expect(params.get('token')).toBe('DUMMY_TOKEN')
   })
 
   it('works if authOrigin is missing', async () => {

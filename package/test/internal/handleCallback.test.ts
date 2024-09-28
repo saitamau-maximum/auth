@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
+// jsdom だと TextEncoder と Uint8Array の互換性がないみたいなので node でテストする (挙動は同じ...はず)
+// https://github.com/vitest-dev/vitest/issues/4043
+// @vitest-environment node
+
+import { jwtVerify, SignJWT } from 'jose'
 import { describe, expect, it, vi } from 'vitest'
 
 import { handleCallback } from '../../src/internal/handleCallback'
 import {
-  derivePublicKey,
+  exportKey,
+  generateKeyPair,
   importKey,
-  sign,
-  verify,
+  keypairProtectedHeader,
 } from '../../src/internal/keygen'
 
 import { cookieParser, removesCookie } from './cookieUtil'
@@ -29,6 +34,29 @@ const TEST_PUBKEY =
 
 const TEST_PRIVKEY =
   'eyJrdHkiOiJFQyIsImtleV9vcHMiOlsic2lnbiJdLCJleHQiOnRydWUsImNydiI6IlAtNTIxIiwieCI6IkFmRVhoOTY5VTRxMUo3RDNZQlBpMFY2ODlPdUFaOVJGZS1STHRhSFE4QmUwTEQ2LWQ5dlJ1ZEFFMnlHTE10Z0lMX1drekhSRF9TNjg2M1BkUUZKLTJydnEiLCJ5IjoiQUtpZ0Ftd2FPcF9Vd3V2NXZqOEE4UXFjS2Z3WG42enZNUHU3QWhOdkFDdE5qdC1UdTBvRWg3d0Z5dGJDR3FNaFRYMm01SEJnZlZhbTh5aTRMWkRiSWlYcCIsImQiOiJBVVJnWGpLazBtaDlsbDdtVDZvRDJTT09TZEF1bWpITFQtOU1pZnRsd1VNOGpiTlNRMkJxOVlBemNvVkZRRmV5VzEzbVNzY3dUT0dUbTRxZ1QwWDJnV1VmIn0='
+
+const generateJWT = async ({
+  privateKey,
+  subject = 'Maximum Auth Data',
+  audience = 'test',
+  issuer = 'maximum-auth',
+  exp = '1 day',
+  ...payload
+}: {
+  privateKey: CryptoKey
+  subject?: string
+  audience?: string
+  issuer?: string
+  exp?: string
+  [key: string]: unknown
+}) => {
+  let jwt = new SignJWT(payload).setNotBefore('0 sec').setIssuedAt()
+  if (subject) jwt = jwt.setSubject(subject)
+  if (audience) jwt = jwt.setAudience(audience)
+  if (issuer) jwt = jwt.setIssuer(issuer)
+  if (exp) jwt = jwt.setExpirationTime(exp)
+  return await jwt.setProtectedHeader(keypairProtectedHeader).sign(privateKey)
+}
 
 describe('required options missing', () => {
   it('throws when options.authName is not provided', async () => {
@@ -182,83 +210,13 @@ describe('dev mode', () => {
 })
 
 describe('prod mode', () => {
-  it('returns 400 when authdata is missing', async () => {
-    const param = new URLSearchParams()
-    param.set('iv', 'test')
-    param.set('signature', 'test')
-    param.set('signatureIv', 'test')
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
+  it('returns 400 when token is missing', async () => {
+    const req = new Request('http://localhost/auth/callback?', {
+      method: 'GET',
+      headers: {
+        Cookie: '__continue_to=http://localhost/',
       },
-    )
-    const res = await handleCallback(req, {
-      authName: 'test',
-      privateKey: 'test',
     })
-    expect(res).toHaveProperty('status', 400)
-  })
-
-  it('returns 400 when iv is missing', async () => {
-    const param = new URLSearchParams()
-    param.set('authdata', 'test')
-    param.set('signature', 'test')
-    param.set('signatureIv', 'test')
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
-      },
-    )
-    const res = await handleCallback(req, {
-      authName: 'test',
-      privateKey: 'test',
-    })
-    expect(res).toHaveProperty('status', 400)
-  })
-
-  it('returns 400 when signature is missing', async () => {
-    const param = new URLSearchParams()
-    param.set('authdata', 'test')
-    param.set('iv', 'test')
-    param.set('signatureIv', 'test')
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
-      },
-    )
-    const res = await handleCallback(req, {
-      authName: 'test',
-      privateKey: 'test',
-    })
-    expect(res).toHaveProperty('status', 400)
-  })
-
-  it('returns 400 when signatureIv is missing', async () => {
-    const param = new URLSearchParams()
-    param.set('authdata', 'test')
-    param.set('iv', 'test')
-    param.set('signature', 'test')
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
-      },
-    )
     const res = await handleCallback(req, {
       authName: 'test',
       privateKey: 'test',
@@ -268,10 +226,7 @@ describe('prod mode', () => {
 
   it('returns 400 when cookie is not set', async () => {
     const param = new URLSearchParams()
-    param.set('authdata', 'test')
-    param.set('iv', 'test')
-    param.set('signature', 'test')
-    param.set('signatureIv', 'test')
+    param.set('token', 'test')
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
@@ -285,14 +240,16 @@ describe('prod mode', () => {
     expect(res).toHaveProperty('status', 400)
   })
 
-  it('returns 400 when authdata does not match signature', async () => {
+  it('returns 400 when audience is not authname', async () => {
     const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const token = await generateJWT({
+      privateKey: authPrivkey,
+      audience: 'test1',
+    })
 
     const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
+    param.set('token', token)
+
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
@@ -309,14 +266,16 @@ describe('prod mode', () => {
     expect(res).toHaveProperty('status', 400)
   })
 
-  it('returns 400 when iv does not match signatureIv', async () => {
+  it('returns 400 when issuer is not "maximum-auth"', async () => {
     const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const token = await generateJWT({
+      privateKey: authPrivkey,
+      issuer: 'test',
+    })
 
     const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test', authPrivkey))
+    param.set('token', token)
+
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
@@ -332,15 +291,69 @@ describe('prod mode', () => {
     })
     expect(res).toHaveProperty('status', 400)
   })
+
+  it('returns 400 when subject is not "Maximum Auth Data"', async () => {
+    const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const token = await generateJWT({
+      privateKey: authPrivkey,
+      subject: 'test',
+    })
+
+    const param = new URLSearchParams()
+    param.set('token', token)
+
+    const req = new Request(
+      'http://localhost/auth/callback?' + param.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Cookie: '__continue_to=http://localhost/',
+        },
+      },
+    )
+    const res = await handleCallback(req, {
+      authName: 'test',
+      privateKey: TEST_AUTHPRIVKEY,
+    })
+    expect(res).toHaveProperty('status', 400)
+  })
+
+  it('returns 400 when token is expired', async () => {
+    const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const token = await generateJWT({
+      privateKey: authPrivkey,
+      exp: '1 sec',
+    })
+
+    const param = new URLSearchParams()
+    param.set('token', token)
+
+    // 5 sec の tolerance 考慮
+    await new Promise(resolve => setTimeout(resolve, 7000))
+
+    const req = new Request(
+      'http://localhost/auth/callback?' + param.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Cookie: '__continue_to=http://localhost/',
+        },
+      },
+    )
+    const res = await handleCallback(req, {
+      authName: 'test',
+      privateKey: TEST_AUTHPRIVKEY,
+    })
+    expect(res).toHaveProperty('status', 400)
+  }, 19000)
 
   it('uses options.authPubkey if set', async () => {
-    const authPrivkey = await importKey(TEST_PRIVKEY, 'privateKey')
+    const { privateKey, publicKey } = await generateKeyPair()
+    const token = await generateJWT({ privateKey })
 
     const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
+    param.set('token', token)
+
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
@@ -353,19 +366,18 @@ describe('prod mode', () => {
     const res = await handleCallback(req, {
       authName: 'test',
       privateKey: TEST_PRIVKEY,
-      authPubkey: TEST_PUBKEY,
+      authPubkey: await exportKey(publicKey),
     })
     expect(res).toHaveProperty('status', 302)
   })
 
   it("removes '__continue_to' cookie", async () => {
     const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const token = await generateJWT({ privateKey: authPrivkey })
 
     const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
+    param.set('token', token)
+
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
@@ -384,14 +396,15 @@ describe('prod mode', () => {
     expect(removesCookie(cookie, '__continue_to')).toBeTruthy()
   })
 
-  it("adds '__authdata' cookie", async () => {
+  it("adds 'token' cookie", async () => {
     const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
 
+    const payload = { hoge: 'fuga' }
+    const token = await generateJWT({ privateKey: authPrivkey, ...payload })
+
     const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
+    param.set('token', token)
+
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
@@ -407,136 +420,33 @@ describe('prod mode', () => {
     })
     expect(res.headers.has('Set-Cookie')).toBeTruthy()
     const cookie = cookieParser(res.headers.get('Set-Cookie')!)
-    expect(cookie.has('__authdata')).toBeTruthy()
-    expect(cookie.get('__authdata')![0]).toBe('test1')
-  })
+    expect(cookie.has('token')).toBeTruthy()
 
-  it("adds '__iv' cookie", async () => {
-    const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const pubkey = await importKey(TEST_PUBKEY, 'publicKey')
+    const jwt = cookie.get('token')![0]
+    const { payload: resPayload } = await jwtVerify(jwt, pubkey, {
+      algorithms: [keypairProtectedHeader.alg],
+      audience: 'test',
+      clockTolerance: 5,
+      issuer: 'test',
+      subject: 'Maximum Auth Data',
+    }).catch(() => ({ payload: null }))
 
-    const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
-      },
-    )
-    const res = await handleCallback(req, {
-      authName: 'test',
-      privateKey: TEST_PRIVKEY,
-    })
-    expect(res.headers.has('Set-Cookie')).toBeTruthy()
-    const cookie = cookieParser(res.headers.get('Set-Cookie')!)
-    expect(cookie.has('__iv')).toBeTruthy()
-    expect(cookie.get('__iv')![0]).toBe('test2')
-  })
-
-  it("adds '__sign1' cookie", async () => {
-    const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
-    const authPubkey = await derivePublicKey(authPrivkey)
-
-    const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
-      },
-    )
-    const res = await handleCallback(req, {
-      authName: 'test',
-      privateKey: TEST_PRIVKEY,
-    })
-    expect(res.headers.has('Set-Cookie')).toBeTruthy()
-    const cookie = cookieParser(res.headers.get('Set-Cookie')!)
-    expect(cookie.has('__sign1')).toBeTruthy()
-    // timingSafeEqual が使えないので、 verify で検証
-    expect(
-      await verify('test1', cookie.get('__sign1')![0], authPubkey),
-    ).toBeTruthy()
-  })
-
-  it("adds '__sign2' cookie", async () => {
-    const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
-
-    const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
-      },
-    )
-    const res = await handleCallback(req, {
-      authName: 'test',
-      privateKey: TEST_PRIVKEY,
-    })
-    expect(res.headers.has('Set-Cookie')).toBeTruthy()
-    const cookie = cookieParser(res.headers.get('Set-Cookie')!)
-    expect(cookie.has('__sign2')).toBeTruthy()
-    const testPubkey = await importKey(TEST_PUBKEY, 'publicKey')
-    expect(
-      await verify('test1', cookie.get('__sign2')![0], testPubkey),
-    ).toBeTruthy()
-  })
-
-  it("adds '__sign3' cookie", async () => {
-    const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
-
-    const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
-    const req = new Request(
-      'http://localhost/auth/callback?' + param.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Cookie: '__continue_to=http://localhost/',
-        },
-      },
-    )
-    const res = await handleCallback(req, {
-      authName: 'test',
-      privateKey: TEST_PRIVKEY,
-    })
-    expect(res.headers.has('Set-Cookie')).toBeTruthy()
-    const cookie = cookieParser(res.headers.get('Set-Cookie')!)
-    expect(cookie.has('__sign3')).toBeTruthy()
-    const testPubkey = await importKey(TEST_PUBKEY, 'publicKey')
-    expect(
-      await verify('test2', cookie.get('__sign3')![0], testPubkey),
-    ).toBeTruthy()
+    // jwt 用のプロパティ (iat, exp) などが追加されているので、 deepEqual は使わない
+    expect(resPayload).not.toBeNull()
+    for (const key in payload) {
+      expect(resPayload).toHaveProperty(key)
+      expect(resPayload![key]).toBe(payload[key])
+    }
   })
 
   it("redirects to '__continue_to'", async () => {
     const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const token = await generateJWT({ privateKey: authPrivkey })
 
     const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
+    param.set('token', token)
+
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
@@ -556,12 +466,11 @@ describe('prod mode', () => {
 
   it("redirects to root when '__continue_to' is not set", async () => {
     const authPrivkey = await importKey(TEST_AUTHPRIVKEY, 'privateKey')
+    const token = await generateJWT({ privateKey: authPrivkey })
 
     const param = new URLSearchParams()
-    param.set('authdata', 'test1')
-    param.set('iv', 'test2')
-    param.set('signature', await sign('test1', authPrivkey))
-    param.set('signatureIv', await sign('test2', authPrivkey))
+    param.set('token', token)
+
     const req = new Request(
       'http://localhost/auth/callback?' + param.toString(),
       {
