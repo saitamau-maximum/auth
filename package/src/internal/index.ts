@@ -6,14 +6,11 @@ export {
   generateSymmetricKey,
   importKey,
   keypairGenAlgorithm,
-  keypairHashAlgorithm,
   keypairProtectedHeader,
   keypairUsage,
-  sign,
   symmetricGenAlgorithm,
   symmetricProtectedHeader,
   symmetricUsage,
-  verify,
 } from './keygen'
 export { generateToken, verifyToken } from './tokengen'
 export { handleCallback } from './handleCallback'

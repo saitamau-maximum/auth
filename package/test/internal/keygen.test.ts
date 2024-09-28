@@ -7,23 +7,15 @@ import {
   generateSymmetricKey,
   importKey,
   keypairGenAlgorithm,
-  keypairHashAlgorithm,
   keypairUsage,
-  sign,
   symmetricGenAlgorithm,
   symmetricUsage,
-  verify,
 } from '../../src/internal/keygen'
 
 describe('algorithm & usage', () => {
   it('uses the correct keypair algorithm', () => {
     expect(keypairGenAlgorithm.name).toBe('ECDSA')
     expect(keypairGenAlgorithm.namedCurve).toBe('P-521')
-  })
-
-  it('uses the correct keypair hash algorithm', () => {
-    expect(keypairHashAlgorithm.name).toBe('ECDSA')
-    expect(keypairHashAlgorithm.hash).toBe('SHA-512')
   })
 
   it('uses the correct symmetric algorithm', () => {
@@ -108,14 +100,5 @@ describe('generating symmetric key', () => {
     const exportedKey = await exportKey(key)
     const importedKey = await importKey(exportedKey, 'symmetric')
     expect(await exportKey(importedKey)).toBe(exportedKey)
-  })
-})
-
-describe('using the keys', () => {
-  it('can sign and verify a message', async () => {
-    const keypair = await generateKeyPair()
-    const signature = await sign('Hello, world!', keypair.privateKey)
-    const verified = await verify('Hello, world!', signature, keypair.publicKey)
-    expect(verified).toBe(true)
   })
 })

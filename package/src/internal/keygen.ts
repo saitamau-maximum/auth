@@ -1,4 +1,3 @@
-// jose の ES512 と同じオプション
 const keypairGenAlgorithm = {
   name: 'ECDSA',
   namedCurve: 'P-521',
@@ -8,7 +7,6 @@ const keypairProtectedHeader = {
   alg: 'ES512',
 }
 
-// jose の A256GCMKW と同じオプション
 const symmetricGenAlgorithm = {
   name: 'AES-GCM',
   length: 256,
@@ -17,11 +15,6 @@ const symmetricUsage = ['encrypt', 'decrypt']
 const symmetricProtectedHeader = {
   alg: 'dir',
   enc: 'A256GCM',
-}
-
-const keypairHashAlgorithm = {
-  name: 'ECDSA',
-  hash: 'SHA-512',
 }
 
 const generateKeyPair = () =>
@@ -66,7 +59,6 @@ const importKey = async (
   )
 }
 
-// jose には存在しない
 const derivePublicKey = async (privateKey: CryptoKey) => {
   const publicKey = (await crypto.subtle.exportKey(
     'jwk',
@@ -77,30 +69,6 @@ const derivePublicKey = async (privateKey: CryptoKey) => {
   return importKey(btoa(JSON.stringify(publicKey)), 'publicKey')
 }
 
-const sign = async (data: string, privateKey: CryptoKey) => {
-  const dataBuf = new TextEncoder().encode(data)
-  const resBuf = await crypto.subtle.sign(
-    keypairHashAlgorithm,
-    privateKey,
-    dataBuf,
-  )
-  return btoa(Array.from(new Uint8Array(resBuf)).join(','))
-}
-
-const verify = async (
-  data: string,
-  signature: string,
-  publicKey: CryptoKey,
-) => {
-  const dataBuf = new TextEncoder().encode(data)
-  const signBuf = new Uint8Array(
-    atob(signature)
-      .split(',')
-      .map(byte => parseInt(byte, 10)),
-  )
-  return crypto.subtle.verify(keypairHashAlgorithm, publicKey, signBuf, dataBuf)
-}
-
 export {
   derivePublicKey,
   exportKey,
@@ -108,12 +76,9 @@ export {
   generateSymmetricKey,
   importKey,
   keypairGenAlgorithm,
-  keypairHashAlgorithm,
   keypairProtectedHeader,
   keypairUsage,
-  sign,
   symmetricGenAlgorithm,
   symmetricProtectedHeader,
   symmetricUsage,
-  verify,
 }
