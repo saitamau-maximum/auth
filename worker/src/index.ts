@@ -12,14 +12,7 @@ import {
   handleMe,
   keypairProtectedHeader,
 } from '@saitamau-maximum/auth/internal'
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
 import { SignJWT } from 'jose'
-
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
 
 export default {
   async fetch(
@@ -123,16 +116,9 @@ export default {
     const newHeader = new Headers(res.headers)
 
     // Cache-control: private を付加する
-    if (!res.headers.has('Cache-Control')) {
-      newHeader.set('Cache-Control', 'private')
-    } else {
-      newHeader.set(
-        'Cache-Control',
-        'private, ' + res.headers.get('Cache-Control'),
-      )
-    }
+    newHeader.set('Cache-Control', 'private')
 
-    return new Response(res.body, {
+    return new Response(await res.text(), {
       ...res,
       headers: newHeader,
     })
