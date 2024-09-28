@@ -18,9 +18,9 @@ const tokenGenForTest = async ({
   key,
   ...payload
 }: {
-  name?: string[]
-  pubkey?: string[]
-  callback?: string[]
+  name?: string | string[]
+  pubkey?: string | string[]
+  callback?: string | string[]
   subject?: string
   audience?: string
   issuer?: string
@@ -111,6 +111,9 @@ describe('data verification (user)', () => {
       pubkey: ['test'],
       callback: ['http://foo.bar/'],
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -130,6 +133,9 @@ describe('data verification (user)', () => {
       pubkey: ['test'],
       callback: ['http://foo.bar/'],
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -142,13 +148,38 @@ describe('data verification (user)', () => {
     expect(message).toBe('invalid token')
   })
 
-  it('user mismatch', async () => {
+  it('user not provided', async () => {
     const key = await generateSymmetricKey()
     const token = await tokenGenForTest({
-      name: ['test1'],
+      name: ['test'],
       pubkey: ['test'],
       callback: ['http://foo.bar/'],
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: null,
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid request')
+  })
+
+  it('user mismatch', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      name: 'test1',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test2',
@@ -170,6 +201,9 @@ describe('data verification (pubkey)', () => {
       pubkey: [],
       callback: ['http://foo.bar/'],
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -189,6 +223,9 @@ describe('data verification (pubkey)', () => {
       pubkey: ['test1', 'test2'],
       callback: ['http://foo.bar/'],
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -201,13 +238,38 @@ describe('data verification (pubkey)', () => {
     expect(message).toBe('invalid token')
   })
 
+  it('pubkey not provided', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: null,
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid request')
+  })
+
   it('pubkey mismatch', async () => {
     const key = await generateSymmetricKey()
     const token = await tokenGenForTest({
-      name: ['test'],
-      pubkey: ['test1'],
-      callback: ['http://foo.bar/'],
+      name: 'test',
+      pubkey: 'test1',
+      callback: 'http://foo.bar/',
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -229,6 +291,9 @@ describe('data verification (callback)', () => {
       pubkey: ['test'],
       callback: [],
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -248,6 +313,9 @@ describe('data verification (callback)', () => {
       pubkey: ['test'],
       callback: ['http://foo.bar/', 'http://foo.baz/'],
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -260,13 +328,38 @@ describe('data verification (callback)', () => {
     expect(message).toBe('invalid token')
   })
 
+  it('callback not provided', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.baz/',
+      key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: null,
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid request')
+  })
+
   it('callback mismatch', async () => {
     const key = await generateSymmetricKey()
     const token = await tokenGenForTest({
-      name: ['test'],
-      pubkey: ['test'],
-      callback: ['http://foo.baz/'],
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
       key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
     })
     const [result, message] = await verifyToken({
       name: 'test',
@@ -282,9 +375,9 @@ describe('data verification (callback)', () => {
 
 describe('data verification (subject)', () => {
   const payload = {
-    name: ['test'],
-    pubkey: ['test'],
-    callback: ['http://foo.bar/'],
+    name: 'test',
+    pubkey: 'test',
+    callback: 'http://foo.bar/',
   }
 
   it('subject lack', async () => {
@@ -329,9 +422,9 @@ describe('data verification (subject)', () => {
 
 describe('data verification (audience)', () => {
   const payload = {
-    name: ['test'],
-    pubkey: ['test'],
-    callback: ['http://foo.bar/'],
+    name: 'test',
+    pubkey: 'test',
+    callback: 'http://foo.bar/',
   }
 
   it('audience lack', async () => {
@@ -376,9 +469,9 @@ describe('data verification (audience)', () => {
 
 describe('data verification (issuer)', () => {
   const payload = {
-    name: ['test'],
-    pubkey: ['test'],
-    callback: ['http://foo.bar/'],
+    name: 'test',
+    pubkey: 'test',
+    callback: 'http://foo.bar/',
   }
 
   it('issuer lack', async () => {
