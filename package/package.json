@@ -37,7 +37,6 @@
   },
   "dependencies": {
     "cookie": "^0.6.0",
-    "dayjs": "^1.11.13",
     "jose": "^5.9.3"
   }
 }
