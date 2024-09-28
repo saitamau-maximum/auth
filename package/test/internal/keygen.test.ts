@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  decrypt,
   derivePublicKey,
-  encrypt,
   exportKey,
   generateKeyPair,
   generateSymmetricKey,
@@ -119,12 +117,5 @@ describe('using the keys', () => {
     const signature = await sign('Hello, world!', keypair.privateKey)
     const verified = await verify('Hello, world!', signature, keypair.publicKey)
     expect(verified).toBe(true)
-  })
-
-  it('can encrypt and decrypt a message', async () => {
-    const key = await generateSymmetricKey()
-    const [encryptedData, iv] = await encrypt('Hello, world!', key)
-    const decrypted = await decrypt(encryptedData, key, iv)
-    expect(decrypted).toBe('Hello, world!')
   })
 })
