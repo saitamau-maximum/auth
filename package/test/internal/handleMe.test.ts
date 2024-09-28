@@ -1,16 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
-import type { MockInstance } from 'vitest'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// jsdom だと TextEncoder と Uint8Array の互換性がないみたいなので node でテストする (挙動は同じ...はず)
+// https://github.com/vitest-dev/vitest/issues/4043
+// @vitest-environment node
+
+import { SignJWT } from 'jose'
+import { describe, expect, it } from 'vitest'
 
 import { handleMe } from '../../src/internal/handleMe'
-import { importKey, sign } from '../../src/internal/keygen'
-
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
+import { importKey, keypairProtectedHeader } from '../../src/internal/keygen'
 
 const TEST_PRIVKEY =
   'eyJrdHkiOiJFQyIsImtleV9vcHMiOlsic2lnbiJdLCJleHQiOnRydWUsImNydiI6IlAtNTIxIiwieCI6IkFmRVhoOTY5VTRxMUo3RDNZQlBpMFY2ODlPdUFaOVJGZS1STHRhSFE4QmUwTEQ2LWQ5dlJ1ZEFFMnlHTE10Z0lMX1drekhSRF9TNjg2M1BkUUZKLTJydnEiLCJ5IjoiQUtpZ0Ftd2FPcF9Vd3V2NXZqOEE4UXFjS2Z3WG42enZNUHU3QWhOdkFDdE5qdC1UdTBvRWg3d0Z5dGJDR3FNaFRYMm01SEJnZlZhbTh5aTRMWkRiSWlYcCIsImQiOiJBVVJnWGpLazBtaDlsbDdtVDZvRDJTT09TZEF1bWpITFQtOU1pZnRsd1VNOGpiTlNRMkJxOVlBemNvVkZRRmV5VzEzbVNzY3dUT0dUbTRxZ1QwWDJnV1VmIn0='
@@ -63,82 +61,10 @@ describe('dev mode', () => {
       'https://avatars.githubusercontent.com/u/120705481?v=4',
     )
     expect(json).toHaveProperty('teams', ['leaders'])
-    expect(json).toHaveProperty('time')
-    // 1ms 以内の誤差を許容
-    expect(dayjs.tz().valueOf() - json.time).toBeLessThan(1000)
   })
 })
 
 describe('prod mode', () => {
-  let mockedFetch: MockInstance<
-    [input: string | Request | URL, init?: RequestInit | undefined],
-    Promise<Response>
-  >
-
-  beforeEach(() => {
-    mockedFetch = vi
-      .spyOn(global, 'fetch')
-      .mockImplementation(async (path, options) => {
-        // webapp/app/routes/user.tsx
-        if (
-          path === 'https://auth.server.test/user' ||
-          path === 'https://auth.maximum.vc/user'
-        ) {
-          expect(options).toBeTruthy()
-          expect(options!.method).toBe('POST')
-          expect(options!.headers).toBeTruthy()
-          const headers = new Headers(options!.headers)
-          expect(headers.get('content-type')).toBeTruthy()
-          expect(
-            headers.get('content-type')!.includes('application/json'),
-          ).toBeTruthy()
-          expect(options!.body).toBeTruthy()
-          await expect(
-            new Promise((resolve, reject) => {
-              try {
-                JSON.parse(options!.body as string)
-                resolve(true)
-              } catch (e) {
-                reject(e)
-              }
-            }),
-          ).resolves.toBeTruthy()
-          const data = JSON.parse(options!.body as string)
-          expect(data.name).toBeTypeOf('string')
-          expect(data.pubkey).toBeTypeOf('string')
-          expect(data.data).toBeTypeOf('string')
-          expect(data.iv).toBeTypeOf('string')
-          expect(data.sgn1).toBeTypeOf('string')
-          expect(data.sgn2).toBeTypeOf('string')
-          expect(data.sgn3).toBeTypeOf('string')
-          return new Response(
-            JSON.stringify({
-              id: '120705481',
-              display_name: 'saitamau-maximum',
-              is_member: true,
-              profile_image:
-                'https://avatars.githubusercontent.com/u/120705481?v=4',
-              teams: ['leaders'],
-              time: dayjs.tz().valueOf(),
-            }),
-            {
-              status: 200,
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            },
-          )
-        }
-
-        console.error('unexpected fetch', path)
-        return new Response(null, { status: 500 })
-      })
-  })
-
-  afterEach(() => {
-    mockedFetch.mockRestore()
-  })
-
   it('returns 401 when not logged in', async () => {
     const req = new Request('http://localhost/auth/me')
     const res = await handleMe(req, {
@@ -163,10 +89,20 @@ describe('prod mode', () => {
 
   it('returns 200 when logged in', async () => {
     const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+    const payload = { hoge: 'fuga' }
+    const token = await new SignJWT(payload)
+      .setSubject('Maximum Auth Data')
+      .setAudience('test')
+      .setIssuer('test')
+      .setNotBefore('0 sec')
+      .setIssuedAt()
+      .setExpirationTime('1 day')
+      .setProtectedHeader(keypairProtectedHeader)
+      .sign(privkey)
 
     const req = new Request('http://localhost/auth/me', {
       headers: {
-        Cookie: `__authdata=test;__iv=ivtest;__sign1=hoge;__sign2=${await sign('test', privkey)};__sign3=${await sign('ivtest', privkey)}`,
+        Cookie: `token=${token}`,
       },
     })
     const res = await handleMe(req, {
@@ -177,18 +113,33 @@ describe('prod mode', () => {
     expect(res.status).toBe(200)
   })
 
-  it('works if authOrigin is missing', async () => {
+  it('returns 401 when token is expired', async () => {
     const privkey = await importKey(TEST_PRIVKEY, 'privateKey')
+    const payload = { hoge: 'fuga' }
+    const token = await new SignJWT(payload)
+      .setSubject('Maximum Auth Data')
+      .setAudience('test')
+      .setIssuer('test')
+      .setNotBefore('0 sec')
+      .setIssuedAt()
+      .setExpirationTime('1 sec')
+      .setProtectedHeader(keypairProtectedHeader)
+      .sign(privkey)
+
+    // tolerance 5 sec を考慮
+    await new Promise(resolve => setTimeout(resolve, 7000))
 
     const req = new Request('http://localhost/auth/me', {
       headers: {
-        Cookie: `__authdata=test;__iv=ivtest;__sign1=hoge;__sign2=${await sign('test', privkey)};__sign3=${await sign('ivtest', privkey)}`,
+        Cookie: `token=${token}`,
       },
     })
     const res = await handleMe(req, {
       authName: 'test',
       privateKey: TEST_PRIVKEY,
     })
-    expect(res.status).toBe(200)
-  })
+    expect(res.status).toBe(401)
+  }, 10000)
+
+  // その他の部分は userinfo.test.ts でテストする
 })

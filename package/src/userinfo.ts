@@ -1,19 +1,7 @@
 import { parse as parseCookie } from 'cookie'
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
+import { jwtVerify } from 'jose'
 
-import {
-  AUTH_DOMAIN,
-  derivePublicKey,
-  exportKey,
-  importKey,
-  verify,
-} from './internal'
-
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
+import { derivePublicKey, importKey, keypairProtectedHeader } from './internal'
 
 interface Options {
   /**
@@ -45,43 +33,6 @@ interface UserInfo {
   profile_image: string
   teams: string[]
   is_member: boolean
-
-  time: number
-}
-
-const checkLoggedIn = async (
-  request: Request,
-  publicKey: CryptoKey | null,
-  isDev?: boolean,
-) => {
-  const cookie = parseCookie(request.headers.get('Cookie') || '')
-
-  if (isDev) {
-    return !!cookie['__dev_logged_in']
-  } else if (publicKey === null) {
-    throw new Error('publicKey が null です')
-  }
-
-  if (
-    !cookie['__authdata'] ||
-    !cookie['__iv'] ||
-    !cookie['__sign1'] ||
-    !cookie['__sign2'] ||
-    !cookie['__sign3']
-  ) {
-    return false
-  }
-
-  // ほんとはいつ認証したかについてもチェックすべきかもだが、
-  // サブリクエスト数が多くなっても困るので簡易的にチェック
-  const authdata = cookie['__authdata']
-  const iv = cookie['__iv']
-  const sig = cookie['__sign2']
-  const sigIv = cookie['__sign3']
-  return (
-    (await verify(authdata, sig, publicKey)) &&
-    (await verify(iv, sigIv, publicKey))
-  )
 }
 
 const getUserInfo = async (
@@ -94,10 +45,10 @@ const getUserInfo = async (
     }
   }
 
+  const cookie = parseCookie(request.headers.get('Cookie') || '')
+
   if (options.dev) {
-    if (!(await checkLoggedIn(request, null, true))) {
-      return null
-    }
+    if (!cookie['__dev_logged_in']) return null
 
     const DUMMY_USERDATA: UserInfo = {
       id: '120705481',
@@ -105,7 +56,6 @@ const getUserInfo = async (
       is_member: true,
       profile_image: 'https://avatars.githubusercontent.com/u/120705481?v=4',
       teams: ['leaders'],
-      time: dayjs.tz().valueOf(),
     }
 
     return DUMMY_USERDATA
@@ -114,41 +64,17 @@ const getUserInfo = async (
   const privateKey = await importKey(options.privateKey, 'privateKey')
   const publicKey = await derivePublicKey(privateKey)
 
-  if (await checkLoggedIn(request, publicKey)) {
-    // checkLoggedIn で Cookie があることを前提としている
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const cookie = parseCookie(request.headers.get('Cookie')!)
+  if (!cookie['token']) return null
 
-    const postData = {
-      name: options.authName,
-      pubkey: await exportKey(publicKey),
-      data: cookie['__authdata'],
-      iv: cookie['__iv'],
-      sgn1: cookie['__sign1'],
-      sgn2: cookie['__sign2'],
-      sgn3: cookie['__sign3'],
-    }
+  const { payload } = await jwtVerify<UserInfo>(cookie['token'], publicKey, {
+    algorithms: [keypairProtectedHeader.alg],
+    audience: options.authName,
+    issuer: options.authName,
+    subject: 'Maximum Auth Data',
+    clockTolerance: 5,
+  }).catch(() => ({ payload: null }))
 
-    const authOrigin = options.authOrigin || AUTH_DOMAIN
-
-    const res = await fetch(`${authOrigin}/user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData),
-    })
-
-    if (res.status === 200) {
-      const data = await res.json<UserInfo>()
-      if (!data.is_member) return null
-      return data
-    } else {
-      console.error(res.status, res.statusText)
-      return null
-    }
-  }
-  return null
+  return payload
 }
 
-export { UserInfo, checkLoggedIn, getUserInfo }
+export { UserInfo, getUserInfo }

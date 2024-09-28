@@ -2,7 +2,6 @@ import { serialize as serializeCookie } from 'cookie'
 
 import { AUTH_DOMAIN } from './const'
 import { cookieOptions } from './cookie'
-import { generateGoParam } from './goparam'
 import { derivePublicKey, exportKey, importKey } from './keygen'
 
 const usedCharacters = Array.from(
@@ -170,7 +169,7 @@ export const handleLogin = async (
   const privkey = await importKey(options.privateKey, 'privateKey')
   const pubkey = await derivePublicKey(privkey)
 
-  const redirectData = await fetch(`${authOrigin}/token`, {
+  const token = await fetch(`${authOrigin}/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -180,23 +179,21 @@ export const handleLogin = async (
       pubkey: await exportKey(pubkey),
       callback: callbackUrl,
     }),
-  })
-    .then(res => res.json<{ token: string; iv: string }>())
-    .catch(() => {
-      throw new Error('auth server error', {
-        cause:
-          'authName or privateKey is incorrect. The auth server might be down.',
-      })
+  }).then(res => {
+    if (res.ok) {
+      return res.text()
+    }
+    throw new Error('auth server error', {
+      cause:
+        'authName or privateKey is incorrect. The auth server might be down.',
     })
+  })
 
-  const param = await generateGoParam(
-    options.authName,
-    await exportKey(pubkey),
-    callbackUrl,
-    atob(redirectData.token),
-    atob(redirectData.iv),
-    privkey,
-  )
+  const param = new URLSearchParams()
+  param.set('name', options.authName)
+  param.set('pubkey', await exportKey(pubkey))
+  param.set('callback', callbackUrl)
+  param.set('token', token)
 
   return new Response(null, {
     status: 302,

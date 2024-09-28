@@ -1,12 +1,5 @@
-import {
-  derivePublicKey,
-  handleCallback,
-  handleLogin,
-  handleLogout,
-  handleMe,
-  importKey,
-} from './internal'
-import { checkLoggedIn } from './userinfo'
+import { handleCallback, handleLogin, handleLogout, handleMe } from './internal'
+import { getUserInfo } from './userinfo'
 
 interface Env {
   AUTH_NAME: string
@@ -24,8 +17,6 @@ const middleware: PagesFunction<Env> = async context => {
   }
 
   const reqUrl = new URL(context.request.url)
-  const privkey = await importKey(context.env.PRIVKEY, 'privateKey')
-  const pubkey = await derivePublicKey(privkey)
   const isDev = context.env.IS_DEV === 'true'
 
   if (reqUrl.pathname.startsWith('/auth/')) {
@@ -63,7 +54,14 @@ const middleware: PagesFunction<Env> = async context => {
     return new Response('not found', { status: 404 })
   }
 
-  if (!(await checkLoggedIn(context.request, pubkey, isDev))) {
+  const userInfo = await getUserInfo(context.request, {
+    authName: context.env.AUTH_NAME,
+    privateKey: context.env.PRIVKEY,
+    authOrigin: context.env.AUTH_DOMAIN,
+    dev: isDev,
+  })
+
+  if (!userInfo) {
     return handleLogin(context.request, {
       authName: context.env.AUTH_NAME,
       privateKey: context.env.PRIVKEY,

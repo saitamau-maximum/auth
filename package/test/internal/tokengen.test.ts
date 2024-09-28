@@ -1,334 +1,514 @@
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
+// jsdom だと TextEncoder と Uint8Array の互換性がないみたいなので node でテストする (挙動は同じ...はず)
+// https://github.com/vitest-dev/vitest/issues/4043
+// @vitest-environment node
+
+import { EncryptJWT } from 'jose'
 import { describe, expect, it } from 'vitest'
 
-import { generateSymmetricKey, encrypt } from '../../src/internal/keygen'
+import {
+  generateSymmetricKey,
+  symmetricProtectedHeader,
+} from '../../src/internal/keygen'
 import { generateToken, verifyToken } from '../../src/internal/tokengen'
 
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
-
-const tokenGenForTest = async (
-  name: string[],
-  pubkey: string[],
-  callback: string[],
-  time: number[],
-  key: CryptoKey,
-) => {
-  const param = new URLSearchParams()
-  for (const n of name) param.append('user', n)
-  for (const p of pubkey) param.append('pubkey', p)
-  for (const c of callback) param.append('callback', c)
-  for (const t of time) param.append('time', String(t))
-  const tokenData = btoa(param.toString())
-  return await encrypt(tokenData, key)
+const tokenGenForTest = async ({
+  subject,
+  audience,
+  issuer,
+  key,
+  ...payload
+}: {
+  name?: string | string[]
+  pubkey?: string | string[]
+  callback?: string | string[]
+  subject?: string
+  audience?: string
+  issuer?: string
+  key: CryptoKey
+}) => {
+  let res = new EncryptJWT(payload)
+  if (subject) res = res.setSubject(subject)
+  if (audience) res = res.setAudience(audience)
+  if (issuer) res = res.setIssuer(issuer)
+  return res
+    .setNotBefore('0 sec')
+    .setIssuedAt()
+    .setExpirationTime('10 sec')
+    .setProtectedHeader(symmetricProtectedHeader)
+    .encrypt(key)
 }
 
 describe('basic generate & verify', () => {
   it('generates a token', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await generateToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-    )
+    const token = await generateToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+    })
     expect(token).toBeTypeOf('string')
-    expect(iv).toBeTypeOf('string')
   })
 
   it('can verify a token', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await generateToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+    const token = await generateToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(true)
     expect(message).toBe('valid token')
   })
 
   it('can verify an invalid token', async () => {
     const key = await generateSymmetricKey()
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      'invalid',
-      'invalid',
-    )
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: 'invalid',
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })
 
   it('can verify an expired token', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await generateToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-    )
-    await new Promise(resolve => setTimeout(resolve, 11000))
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+    const token = await generateToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+    })
+    await new Promise(resolve => setTimeout(resolve, 20000))
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
-    expect(message).toBe('token expired')
-  }, 20000)
+    expect(message).toBe('invalid token')
+  }, 25000)
 })
 
 describe('data verification (user)', () => {
   it('user lack', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      [],
-      ['test'],
-      ['http://foo.bar/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: [],
+      pubkey: ['test'],
+      callback: ['http://foo.bar/'],
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })
 
   it('many user', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test1', 'test2'],
-      ['test'],
-      ['http://foo.bar/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: ['test1', 'test2'],
+      pubkey: ['test'],
+      callback: ['http://foo.bar/'],
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })
 
+  it('user not provided', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      name: ['test'],
+      pubkey: ['test'],
+      callback: ['http://foo.bar/'],
+      key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: null,
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid request')
+  })
+
   it('user mismatch', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test1'],
-      ['test'],
-      ['http://foo.bar/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: 'test1',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test2',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test2',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
-    expect(message).toBe('user mismatch')
+    expect(message).toBe('invalid token')
   })
 })
 
 describe('data verification (pubkey)', () => {
   it('pubkey lack', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      [],
-      ['http://foo.bar/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: ['test'],
+      pubkey: [],
+      callback: ['http://foo.bar/'],
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })
 
   it('many pubkey', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      ['test1', 'test2'],
-      ['http://foo.bar/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: ['test'],
+      pubkey: ['test1', 'test2'],
+      callback: ['http://foo.bar/'],
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })
 
+  it('pubkey not provided', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: null,
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid request')
+  })
+
   it('pubkey mismatch', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      ['test1'],
-      ['http://foo.bar/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: 'test',
+      pubkey: 'test1',
+      callback: 'http://foo.bar/',
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test2',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test2',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
-    expect(message).toBe('pubkey mismatch')
+    expect(message).toBe('invalid token')
   })
 })
 
 describe('data verification (callback)', () => {
   it('callback lack', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      ['test'],
-      [],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: ['test'],
+      pubkey: ['test'],
+      callback: [],
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })
 
   it('many callback', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      ['test'],
-      ['http://foo.bar/', 'http://foo.baz/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: ['test'],
+      pubkey: ['test'],
+      callback: ['http://foo.bar/', 'http://foo.baz/'],
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
+  })
+
+  it('callback not provided', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.baz/',
+      key,
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: null,
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid request')
   })
 
   it('callback mismatch', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      ['test'],
-      ['http://foo.bar/'],
-      [1234567890123],
+    const token = await tokenGenForTest({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.baz/',
-      key,
-      token,
-      iv,
-    )
+      audience: 'maximum-auth',
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Token',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.baz/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
-    expect(message).toBe('callback mismatch')
+    expect(message).toBe('invalid token')
   })
 })
 
-describe('data verification (time)', () => {
-  it('time lack', async () => {
+describe('data verification (subject)', () => {
+  const payload = {
+    name: 'test',
+    pubkey: 'test',
+    callback: 'http://foo.bar/',
+  }
+
+  it('subject lack', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      ['test'],
-      ['http://foo.bar/'],
-      [],
+    const token = await tokenGenForTest({
+      ...payload,
+      issuer: 'maximum-auth',
+      audience: 'maximum-auth',
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
-      key,
-      token,
-      iv,
-    )
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })
 
-  it('many time', async () => {
+  it('subject mismatch', async () => {
     const key = await generateSymmetricKey()
-    const [token, iv] = await tokenGenForTest(
-      ['test'],
-      ['test'],
-      ['http://foo.bar/'],
-      [1234567890123, 1234567890124],
+    const token = await tokenGenForTest({
+      ...payload,
+      subject: 'test',
+      issuer: 'maximum-auth',
+      audience: 'maximum-auth',
       key,
-    )
-    const [result, message] = await verifyToken(
-      'test',
-      'test',
-      'http://foo.bar/',
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid token')
+  })
+})
+
+describe('data verification (audience)', () => {
+  const payload = {
+    name: 'test',
+    pubkey: 'test',
+    callback: 'http://foo.bar/',
+  }
+
+  it('audience lack', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      ...payload,
+      subject: 'Maximum Auth Token',
+      issuer: 'maximum-auth',
       key,
-      token,
-      iv,
-    )
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid token')
+  })
+
+  it('audience mismatch', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      ...payload,
+      subject: 'Maximum Auth Token',
+      issuer: 'maximum-auth',
+      audience: 'test',
+      key,
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid token')
+  })
+})
+
+describe('data verification (issuer)', () => {
+  const payload = {
+    name: 'test',
+    pubkey: 'test',
+    callback: 'http://foo.bar/',
+  }
+
+  it('issuer lack', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      ...payload,
+      subject: 'Maximum Auth Token',
+      audience: 'maximum-auth',
+      key,
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
+    expect(result).toBe(false)
+    expect(message).toBe('invalid token')
+  })
+
+  it('issuer mismatch', async () => {
+    const key = await generateSymmetricKey()
+    const token = await tokenGenForTest({
+      ...payload,
+      subject: 'Maximum Auth Token',
+      audience: 'maximum-auth',
+      issuer: 'test',
+      key,
+    })
+    const [result, message] = await verifyToken({
+      name: 'test',
+      pubkey: 'test',
+      callback: 'http://foo.bar/',
+      symkey: key,
+      token: token,
+    })
     expect(result).toBe(false)
     expect(message).toBe('invalid token')
   })

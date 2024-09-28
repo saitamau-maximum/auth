@@ -1,24 +1,18 @@
 import {
-  checkLoggedIn,
+  getUserInfo,
   validateRequest as validateRequestFromProxy,
 } from '@saitamau-maximum/auth'
 import {
   derivePublicKey,
   exportKey,
   importKey,
-  sign,
   handleLogin,
   handleLogout,
   handleCallback,
   handleMe,
+  keypairProtectedHeader,
 } from '@saitamau-maximum/auth/internal'
-import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
-import utc from 'dayjs/plugin/utc'
-
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault('Asia/Tokyo')
+import { SignJWT } from 'jose'
 
 export default {
   async fetch(
@@ -86,7 +80,12 @@ export default {
     }
 
     // ログインしてない場合はログインページに移動
-    if (!(await checkLoggedIn(request, publicKey, dev))) {
+    const userData = await getUserInfo(request, {
+      authName,
+      privateKey: env.PRIVKEY,
+      dev,
+    })
+    if (!userData) {
       return handleLogin(request, {
         authName,
         privateKey: env.PRIVKEY,
@@ -95,9 +94,14 @@ export default {
       })
     }
 
-    const now = dayjs.tz().valueOf()
-    const rand = btoa(crypto.getRandomValues(new Uint8Array(16)).toString())
-    const mac = await sign(`${now}___${rand}`, privateKey)
+    const token = await new SignJWT({})
+      .setSubject('Maximum Auth Proxy')
+      .setIssuer('maximum-auth-proxy')
+      .setNotBefore('0 sec')
+      .setIssuedAt()
+      .setExpirationTime('5 sec')
+      .setProtectedHeader(keypairProtectedHeader)
+      .sign(privateKey)
 
     // それ以外の場合は Proxy
     const res = await fetch(url.toString(), {
@@ -105,25 +109,16 @@ export default {
       headers: {
         ...request.headers,
         'X-Maximum-Auth-Pubkey': await exportKey(publicKey),
-        'X-Maximum-Auth-Time': now.toString(),
-        'X-Maximum-Auth-Key': rand,
-        'X-Maximum-Auth-Mac': mac,
+        'X-Maximum-Auth-Token': token,
       },
     })
 
     const newHeader = new Headers(res.headers)
 
     // Cache-control: private を付加する
-    if (!res.headers.has('Cache-Control')) {
-      newHeader.set('Cache-Control', 'private')
-    } else {
-      newHeader.set(
-        'Cache-Control',
-        'private, ' + res.headers.get('Cache-Control'),
-      )
-    }
+    newHeader.set('Cache-Control', 'private')
 
-    return new Response(res.body, {
+    return new Response(await res.text(), {
       ...res,
       headers: newHeader,
     })

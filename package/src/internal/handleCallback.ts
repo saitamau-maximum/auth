@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie'
+import { jwtVerify, SignJWT } from 'jose'
+
+import { UserInfo } from '../userinfo'
 
 import { AUTH_PUBKEY } from './const'
 import { cookieOptions } from './cookie'
-import { importKey, sign, verify } from './keygen'
+import { importKey, keypairProtectedHeader } from './keygen'
 
 interface Options {
   /**
@@ -188,11 +191,7 @@ export const handleCallback = async (
     })
   }
 
-  if (
-    ['authdata', 'iv', 'signature', 'signatureIv'].some(
-      key => !param.has(key) || param.getAll(key).length !== 1,
-    )
-  ) {
+  if (!param.has('token')) {
     return new Response('invalid request', { status: 400 })
   }
 
@@ -205,18 +204,31 @@ export const handleCallback = async (
     options.authPubkey || AUTH_PUBKEY,
     'publicKey',
   )
-  const privateKey = await importKey(options.privateKey, 'privateKey')
-
-  if (
-    !(await verify(
-      param.get('authdata') as string,
-      param.get('signature') as string,
-      authPubkey,
-    )) ||
-    !(await verify(param.get('iv')!, param.get('signatureIv')!, authPubkey))
-  ) {
-    return new Response('invalid signature', { status: 400 })
+  const { payload } = await jwtVerify<UserInfo>(
+    param.get('token')!,
+    authPubkey,
+    {
+      algorithms: [keypairProtectedHeader.alg],
+      audience: options.authName,
+      clockTolerance: 5,
+      issuer: 'maximum-auth',
+      subject: 'Maximum Auth Data',
+    },
+  ).catch(() => ({ payload: null }))
+  if (!payload) {
+    return new Response('invalid token', { status: 400 })
   }
+
+  const privateKey = await importKey(options.privateKey, 'privateKey')
+  const newJwt = await new SignJWT(payload)
+    .setSubject('Maximum Auth Data')
+    .setAudience(options.authName)
+    .setIssuer(options.authName)
+    .setNotBefore('0 sec')
+    .setIssuedAt()
+    .setExpirationTime('1 day')
+    .setProtectedHeader(keypairProtectedHeader)
+    .sign(privateKey)
 
   const continueUrl = parseCookie(cookieData)['__continue_to']
 
@@ -230,31 +242,7 @@ export const handleCallback = async (
   )
   newHeader.append(
     'Set-Cookie',
-    serializeCookie('__authdata', param.get('authdata')!, cookieOptions),
-  )
-  newHeader.append(
-    'Set-Cookie',
-    serializeCookie('__iv', param.get('iv')!, cookieOptions),
-  )
-  newHeader.append(
-    'Set-Cookie',
-    serializeCookie('__sign1', param.get('signature')!, cookieOptions),
-  )
-  newHeader.append(
-    'Set-Cookie',
-    serializeCookie(
-      '__sign2',
-      await sign(param.get('authdata')!, privateKey),
-      cookieOptions,
-    ),
-  )
-  newHeader.append(
-    'Set-Cookie',
-    serializeCookie(
-      '__sign3',
-      await sign(param.get('iv')!, privateKey),
-      cookieOptions,
-    ),
+    serializeCookie('token', newJwt, cookieOptions),
   )
   newHeader.set('Location', continueUrl || '/')
 
