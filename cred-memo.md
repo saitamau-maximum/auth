@@ -22,7 +22,7 @@
   - 画面上部に書かれている `Client ID`
 - Client Secret (GITHUB_OAUTH_SECRET)
   - Client secrets から発行したもの
-  - Cloudflare には `*****ba34a5be` が保存されている
+  - Cloudflare には `*****dc257174` が保存されている
 
 ### Auth で使用する情報
 
