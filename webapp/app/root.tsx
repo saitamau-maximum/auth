@@ -1,8 +1,6 @@
 import type { LinksFunction } from '@remix-run/cloudflare'
-import { cssBundleHref } from '@remix-run/css-bundle'
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -46,16 +44,6 @@ export function ErrorBoundary() {
         <head>
           <meta charSet='utf-8' />
           <meta name='viewport' content='width=device-width, initial-scale=1' />
-          <link rel='preconnect' href='https://fonts.googleapis.com' />
-          <link
-            rel='preconnect'
-            href='https://fonts.gstatic.com'
-            crossOrigin='anonymous'
-          />
-          <link
-            href={`https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap&text=${usedCharacters}`}
-            rel='stylesheet'
-          />
           <Meta />
           <Links />
         </head>
@@ -70,7 +58,6 @@ export function ErrorBoundary() {
           </main>
           <ScrollRestoration />
           <Scripts />
-          <LiveReload />
         </body>
       </html>
     )
@@ -100,12 +87,20 @@ export default function App() {
         <Outlet />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   )
 }
 
 export const links: LinksFunction = () => [
-  ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  {
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
+  },
+  {
+    rel: 'stylesheet',
+    href: `https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap&text=${usedCharacters}`,
+  },
 ]
