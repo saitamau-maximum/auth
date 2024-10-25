@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `oauth_connection` (
   `provider_id` INTEGER NOT NULL,
   `provider_user_id` TEXT NOT NULL, -- Provider 側の ID
   -- もしあれば取得する情報
-  `mail_address` TEXT,
+  `email` TEXT,
   `name` TEXT,
   `profile_image_url` TEXT,
   PRIMARY KEY (`user_id`, `provider_id`),
