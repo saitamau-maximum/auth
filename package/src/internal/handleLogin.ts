@@ -1,8 +1,14 @@
 import { serialize as serializeCookie } from 'cookie'
+import { SignJWT } from 'jose'
 
 import { AUTH_DOMAIN } from './const'
 import { cookieOptions } from './cookie'
-import { derivePublicKey, exportKey, importKey } from './keygen'
+import {
+  derivePublicKey,
+  exportKey,
+  importKey,
+  keypairProtectedHeader,
+} from './keygen'
 
 const usedCharacters = Array.from(
   new Set(
@@ -168,6 +174,15 @@ export const handleLogin = async (
   const authOrigin = options.authOrigin || AUTH_DOMAIN
   const privkey = await importKey(options.privateKey, 'privateKey')
   const pubkey = await derivePublicKey(privkey)
+  const mac = await new SignJWT({ callback: callbackUrl })
+    .setSubject('Maximum Auth Token')
+    .setIssuer(options.authName)
+    .setAudience('maximum-auth')
+    .setNotBefore('0 sec')
+    .setIssuedAt()
+    .setExpirationTime('10 sec')
+    .setProtectedHeader(keypairProtectedHeader)
+    .sign(privkey)
 
   const token = await fetch(`${authOrigin}/token`, {
     method: 'POST',
@@ -178,6 +193,7 @@ export const handleLogin = async (
       name: options.authName,
       pubkey: await exportKey(pubkey),
       callback: callbackUrl,
+      mac,
     }),
   }).then(res => {
     if (res.ok) {
