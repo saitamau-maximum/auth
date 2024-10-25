@@ -12,7 +12,12 @@
     "start": "wrangler pages dev ./build/client",
     "typecheck": "tsc",
     "test": "vitest --coverage --ui --dir test",
-    "test:pubkey": "vitest run test/pubkey.test.ts"
+    "test:pubkey": "vitest run test/pubkey.test.ts",
+    "typegen": "wrangler types",
+    "generate:migrations": "drizzle-kit generate",
+    "apply:migrations:local": "wrangler d1 migrations apply --local maximum-idp-db-for-preview",
+    "apply:migrations:preview": "wrangler d1 migrations apply --remote maximum-idp-db-for-preview",
+    "apply:migrations:prod": "wrangler d1 migrations apply --remote maximum-idp-db"
   },
   "dependencies": {
     "@octokit/auth-app": "^7.1.1",
@@ -21,6 +26,7 @@
     "@remix-run/react": "^2.13.1",
     "@saitamau-maximum/auth": "workspace:^",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.35.3",
     "isbot": "^5.1.17",
     "jose": "^5.9.3",
     "octokit": "^4.0.2",
@@ -34,6 +40,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitest/coverage-v8": "^2.1.1",
     "@vitest/ui": "^2.1.1",
+    "drizzle-kit": "^0.26.2",
     "eslint": "^9.11.1",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.30.0",
