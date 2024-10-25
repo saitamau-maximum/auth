@@ -123,6 +123,7 @@ describe('prod mode', () => {
           expect(data.name).toBeTypeOf('string')
           expect(data.pubkey).toBeTypeOf('string')
           expect(data.callback).toBeTypeOf('string')
+          expect(data.mac).toBeTypeOf('string')
 
           return new Response('DUMMY_TOKEN', {
             status: 200,
@@ -197,7 +198,6 @@ describe('prod mode', () => {
     expect(await importKey(TEST_PUBKEY, 'publicKey')).toEqual(
       await importKey(params.get('pubkey')!, 'publicKey'),
     )
-
     expect(params.get('callback')).toBe('https://example.com/auth/callback')
     expect(params.get('token')).toBe('DUMMY_TOKEN')
   })

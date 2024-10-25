@@ -1,6 +1,11 @@
 import type { ActionFunction, LoaderFunction } from '@remix-run/cloudflare'
 
-import { importKey, generateToken } from '@saitamau-maximum/auth/internal'
+import {
+  importKey,
+  generateToken,
+  keypairProtectedHeader,
+} from '@saitamau-maximum/auth/internal'
+import { jwtVerify } from 'jose'
 
 import pubkeyData from '../../data/pubkey.json'
 
@@ -16,11 +21,12 @@ export const action: ActionFunction = async ({ request, context }) => {
     name: string
     pubkey: string
     callback: string
+    mac: string
   }
   const data = await request.json<PostData>()
 
   if (
-    (['name', 'pubkey', 'callback'] as const).some(
+    (['name', 'pubkey', 'callback', 'mac'] as const).some(
       key => !data[key] || typeof data[key] !== 'string',
     )
   ) {
@@ -32,6 +38,21 @@ export const action: ActionFunction = async ({ request, context }) => {
   )
 
   if (registeredData === undefined) {
+    throw new Response('invalid request', { status: 400 })
+  }
+
+  const { payload } = await jwtVerify<{ callback: string }>(
+    data.mac,
+    await importKey(registeredData.pubkey, 'publicKey'),
+    {
+      algorithms: [keypairProtectedHeader.alg],
+      audience: 'maximum-auth',
+      clockTolerance: 5,
+      issuer: registeredData.name,
+      subject: 'Maximum Auth Token',
+    },
+  ).catch(() => ({ payload: null }))
+  if (!payload || payload.callback !== data.callback) {
     throw new Response('invalid request', { status: 400 })
   }
 
