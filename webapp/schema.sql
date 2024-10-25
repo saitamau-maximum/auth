@@ -9,14 +9,14 @@ CREATE TABLE IF NOT EXISTS `user` (
   -- その他の個人情報等は後で追加
 )
 
-CREATE TABLE IF NOT EXISTS `roles` (
+CREATE TABLE IF NOT EXISTS `role` (
   `id` INTEGER PRIMARY KEY,
   `name` TEXT NOT NULL,
   `description` TEXT,
   `priority` INTEGER NOT NULL,
 )
 
-CREATE TABLE IF NOT EXISTS `user_roles` (
+CREATE TABLE IF NOT EXISTS `user_role` (
   `id` INTEGER PRIMARY KEY,
   `user_id` TEXT NOT NULL,
   `role_id` INTEGER NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `oauth_connection` (
 ------------------------------------------------------
 -- Maximum Auth Clients
 
-CREATE TABLE IF NOT EXISTS `auth_clients` (
+CREATE TABLE IF NOT EXISTS `auth_client` (
   `id` INTEGER PRIMARY KEY,
   `name` TEXT NOT NULL,
   `description` TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS `auth_clients` (
   FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`)
 )
 
-CREATE TABLE IF NOT EXISTS `auth_pubkeys` (
+CREATE TABLE IF NOT EXISTS `auth_pubkey` (
   `id` INTEGER PRIMARY KEY,
   `client_id` INTEGER NOT NULL,
   `pubkey` TEXT NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `auth_pubkeys` (
 )
 
 -- Owner とは別の Admin
-CREATE TABLE IF NOT EXISTS `auth_admins` (
+CREATE TABLE IF NOT EXISTS `auth_admin` (
   `id` INTEGER PRIMARY KEY,
   `client_id` INTEGER NOT NULL,
   `admin_id` TEXT NOT NULL,
