@@ -6,10 +6,19 @@ compatibility_date = "2024-09-02"
 GITHUB_APP_ID = "387915"
 GITHUB_OAUTH_ID = "Iv1.3fef0e17322d38ce"
 
-[env.production]
-compatibility_date = "2024-09-02"
+[[d1_databases]]
+# maximum-idp-db-for-preview
+database_id = "bf63ee19-d4b2-44e8-890a-dcbf7510e8e2"
+binding = "db"
+database_name = "db"
 
 [env.production.vars]
 CF_PAGES_URL = "https://auth.maximum.vc"
 GITHUB_APP_ID = "387915"
 GITHUB_OAUTH_ID = "Iv1.3fef0e17322d38ce"
+
+[[env.production.d1_databases]]
+# maximum-idp-db
+database_id = "737a5b09-bcab-4253-8ff2-4a44313d87f1"
+binding = "db"
+database_name = "db"

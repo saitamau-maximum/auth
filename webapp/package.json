@@ -12,7 +12,8 @@
     "start": "wrangler pages dev ./build/client",
     "typecheck": "tsc",
     "test": "vitest --coverage --ui --dir test",
-    "test:pubkey": "vitest run test/pubkey.test.ts"
+    "test:pubkey": "vitest run test/pubkey.test.ts",
+    "typegen": "wrangler types"
   },
   "dependencies": {
     "@octokit/auth-app": "^7.1.1",

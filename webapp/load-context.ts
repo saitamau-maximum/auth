@@ -9,6 +9,7 @@ interface Env {
   PRIVKEY: string
   SESSION_SECRET: string
   CF_PAGES_URL: string
+  db: D1Database
 }
 
 type Cloudflare = Omit<PlatformProxy<Env>, 'dispose'>
