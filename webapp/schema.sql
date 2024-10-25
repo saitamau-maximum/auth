@@ -1,4 +1,3 @@
-------------------------------------------------------
 -- IdP 関連
 
 CREATE TABLE IF NOT EXISTS `user` (
@@ -44,32 +43,3 @@ CREATE TABLE IF NOT EXISTS `oauth_connection` (
   FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
   FOREIGN KEY (`provider_id`) REFERENCES `oauth_provider`(`id`),
 )
-
-------------------------------------------------------
--- Maximum Auth Clients
-
-CREATE TABLE IF NOT EXISTS `auth_client` (
-  `id` INTEGER PRIMARY KEY,
-  `name` TEXT NOT NULL,
-  `description` TEXT,
-  `owner_id` TEXT NOT NULL,
-  FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`)
-)
-
-CREATE TABLE IF NOT EXISTS `auth_pubkey` (
-  `id` INTEGER PRIMARY KEY,
-  `client_id` INTEGER NOT NULL,
-  `pubkey` TEXT NOT NULL,
-  FOREIGN KEY (`client_id`) REFERENCES `auth_clients`(`id`)
-)
-
--- Owner とは別の Admin
-CREATE TABLE IF NOT EXISTS `auth_admin` (
-  `client_id` INTEGER NOT NULL,
-  `admin_id` TEXT NOT NULL,
-  PRIMARY KEY (`client_id`, `admin_id`),
-  FOREIGN KEY (`client_id`) REFERENCES `auth_clients`(`id`),
-  FOREIGN KEY (`admin_id`) REFERENCES `user`(`id`)
-)
-
-------------------------------------------------------
