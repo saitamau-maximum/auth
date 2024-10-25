@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS `role` (
 )
 
 CREATE TABLE IF NOT EXISTS `user_role` (
-  `id` INTEGER PRIMARY KEY,
   `user_id` TEXT NOT NULL,
   `role_id` INTEGER NOT NULL,
+  PRIMARY KEY (`user_id`, `role_id`),
   FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
   FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`),
 )
@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS `oauth_provider` (
 )
 
 CREATE TABLE IF NOT EXISTS `oauth_connection` (
-  `id` INTEGER PRIMARY KEY,
   `user_id` TEXT NOT NULL,
   `provider_id` INTEGER NOT NULL,
   `provider_user_id` TEXT NOT NULL, -- Provider 側の ID
@@ -41,6 +40,7 @@ CREATE TABLE IF NOT EXISTS `oauth_connection` (
   `mail_address` TEXT,
   `name` TEXT,
   `profile_image_url` TEXT,
+  PRIMARY KEY (`user_id`, `provider_id`),
   FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
   FOREIGN KEY (`provider_id`) REFERENCES `oauth_provider`(`id`),
 )
@@ -65,9 +65,9 @@ CREATE TABLE IF NOT EXISTS `auth_pubkey` (
 
 -- Owner とは別の Admin
 CREATE TABLE IF NOT EXISTS `auth_admin` (
-  `id` INTEGER PRIMARY KEY,
   `client_id` INTEGER NOT NULL,
   `admin_id` TEXT NOT NULL,
+  PRIMARY KEY (`client_id`, `admin_id`),
   FOREIGN KEY (`client_id`) REFERENCES `auth_clients`(`id`),
   FOREIGN KEY (`admin_id`) REFERENCES `user`(`id`)
 )
