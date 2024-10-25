@@ -1,5 +1,12 @@
 /* eslint-disable sort-exports/sort-exports */
-import { int, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
+import {
+  check,
+  int,
+  primaryKey,
+  sqliteTable,
+  text,
+} from 'drizzle-orm/sqlite-core'
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(), // UUID で生成することを想定(人に対する連番 ID 嫌いなので)
@@ -8,12 +15,18 @@ export const user = sqliteTable('user', {
   // その他の個人情報等は後で追加
 })
 
-export const role = sqliteTable('role', {
-  id: int('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-  name: text('name').notNull(),
-  description: text('description'),
-  priority: int('priority', { mode: 'number' }).notNull(),
-})
+export const role = sqliteTable(
+  'role',
+  {
+    id: int('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+    name: text('name').notNull(),
+    description: text('description'),
+    priority: int('priority', { mode: 'number' }).notNull(),
+  },
+  table => ({
+    checkConstraint: check('nonneg_priority', sql`${table.priority} >= 0`),
+  }),
+)
 
 export const userRole = sqliteTable(
   'user_role',
@@ -25,11 +38,9 @@ export const userRole = sqliteTable(
       .notNull()
       .references(() => role.id),
   },
-  table => {
-    return {
-      pk: primaryKey({ columns: [table.userId, table.roleId] }),
-    }
-  },
+  table => ({
+    pk: primaryKey({ columns: [table.userId, table.roleId] }),
+  }),
 )
 
 // さすがに client_secret とかは環境変数側に持たせるべき(見れちゃうので)
@@ -55,9 +66,7 @@ export const oauthConnection = sqliteTable(
     name: text('name'),
     profileImageUrl: text('profile_image_url'),
   },
-  table => {
-    return {
-      pk: primaryKey({ columns: [table.userId, table.providerId] }),
-    }
-  },
+  table => ({
+    pk: primaryKey({ columns: [table.userId, table.providerId] }),
+  }),
 )
