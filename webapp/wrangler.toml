@@ -11,6 +11,7 @@ GITHUB_OAUTH_ID = "Iv1.3fef0e17322d38ce"
 database_id = "bf63ee19-d4b2-44e8-890a-dcbf7510e8e2"
 binding = "db"
 database_name = "db"
+migrations_dir = "drizzle"
 
 [env.production.vars]
 CF_PAGES_URL = "https://auth.maximum.vc"
@@ -22,3 +23,4 @@ GITHUB_OAUTH_ID = "Iv1.3fef0e17322d38ce"
 database_id = "737a5b09-bcab-4253-8ff2-4a44313d87f1"
 binding = "db"
 database_name = "db"
+migrations_dir = "drizzle"
