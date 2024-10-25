@@ -90,9 +90,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      drizzle-kit:
-        specifier: ^0.26.2
-        version: 0.26.2
       drizzle-orm:
         specifier: ^0.35.3
         version: 0.35.3(@cloudflare/workers-types@4.20240925.0)(@libsql/client-wasm@0.14.0)(@types/react@18.3.9)(react@18.3.1)
@@ -130,6 +127,9 @@ importers:
       '@vitest/ui':
         specifier: ^2.1.1
         version: 2.1.1(vitest@2.1.1)
+      drizzle-kit:
+        specifier: ^0.26.2
+        version: 0.26.2
       eslint:
         specifier: ^9.11.1
         version: 9.11.1
@@ -6317,7 +6317,7 @@ snapshots:
       '@babel/plugin-syntax-typescript': 7.24.1(@babel/core@7.24.3)
       '@vanilla-extract/babel-plugin-debug-ids': 1.0.5
       '@vanilla-extract/css': 1.14.1
-      esbuild: 0.17.19
+      esbuild: 0.19.12
       eval: 0.1.8
       find-up: 5.0.0
       javascript-stringify: 2.1.0
