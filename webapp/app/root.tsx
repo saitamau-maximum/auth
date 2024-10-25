@@ -9,7 +9,7 @@ import {
   useRouteError,
 } from '@remix-run/react'
 
-import './global.css'
+import styles from './index.css?url'
 
 export function ErrorBoundary() {
   const error = useRouteError()
@@ -58,6 +58,7 @@ export default function App() {
 }
 
 export const links: LinksFunction = () => [
+  { rel: 'stylesheet', href: styles },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
