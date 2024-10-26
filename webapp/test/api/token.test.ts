@@ -42,7 +42,7 @@ const MOCK_ENV = {
     'eyJrZXlfb3BzIjpbImVuY3J5cHQiLCJkZWNyeXB0Il0sImV4dCI6dHJ1ZSwia3R5Ijoib2N0IiwiayI6IlAzZmdPZWRNM2d4OGV0RFdpZG1zVGE0UnphcEtmQ1o4azdVTi0zUjhSVjQiLCJhbGciOiJBMjU2R0NNIn0=',
 }
 
-it('should return 405 if method is not POST', async () => {
+it('returns 405 if method != POST', async () => {
   const res1 = await apiServer.request('/token', { method: 'GET' })
   expect(res1.status).toBe(405)
 
@@ -67,7 +67,7 @@ it('should return 405 if method is not POST', async () => {
   // connect and trace are not supported by Hono
 })
 
-it('should return 400 if Content-Type does not include application/json', async () => {
+it('returns 400 if Content-Type != application/json', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
@@ -76,7 +76,7 @@ it('should return 400 if Content-Type does not include application/json', async 
   expect(await res.text()).toBe('body must be application/json')
 })
 
-it('should return 400 if the request body is not a valid JSON object', async () => {
+it('returns 400 if body is not JSON', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@ it('should return 400 if the request body is not a valid JSON object', async () 
   expect(await res.text()).toBe('Malformed JSON in request body')
 })
 
-it('should return 400 if the request body is missing the name field', async () => {
+it('returns 400 for name-missing body', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -100,7 +100,7 @@ it('should return 400 if the request body is missing the name field', async () =
   expect(await res.text()).toBe('required field missing')
 })
 
-it('should return 400 if the request body is missing the pubkey field', async () => {
+it('returns 400 for pubkey-missing body', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -110,7 +110,7 @@ it('should return 400 if the request body is missing the pubkey field', async ()
   expect(await res.text()).toBe('required field missing')
 })
 
-it('should return 400 if the request body is missing the callback field', async () => {
+it('returns 400 for callback-missing body', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -120,7 +120,7 @@ it('should return 400 if the request body is missing the callback field', async 
   expect(await res.text()).toBe('required field missing')
 })
 
-it('should return 400 if the request body is missing the mac field', async () => {
+it('returns 400 for mac-missing body', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -134,7 +134,7 @@ it('should return 400 if the request body is missing the mac field', async () =>
   expect(await res.text()).toBe('required field missing')
 })
 
-it('should return 400 if the name is not registered', async () => {
+it('returns 400 for non-registered name', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -149,7 +149,7 @@ it('should return 400 if the name is not registered', async () => {
   expect(await res.text()).toBe('data not found')
 })
 
-it('should return 400 if the pubkey is not registered', async () => {
+it('returns 400 for non-registered pubkey', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -164,7 +164,7 @@ it('should return 400 if the pubkey is not registered', async () => {
   expect(await res.text()).toBe('data not found')
 })
 
-it('should return 400 if the name & pubkey pair is not registered', async () => {
+it('returns 400 for non-registered name&pubkey pair', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -179,7 +179,7 @@ it('should return 400 if the name & pubkey pair is not registered', async () => 
   expect(await res.text()).toBe('data not found')
 })
 
-it('should return 400 if the mac is invalid (callback does not match)', async () => {
+it('returns 400 for invalid mac (mismatched callback)', async () => {
   const mac = await new SignJWT({ callback: 'callback1' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
@@ -204,7 +204,7 @@ it('should return 400 if the mac is invalid (callback does not match)', async ()
   expect(await res.text()).toBe('invalid mac')
 })
 
-it('should return 400 if the mac is invalid (subject is not correct)', async () => {
+it('returns 400 for invalid mac (incorrect subject)', async () => {
   const mac = await new SignJWT({ callback: 'callback' })
     .setSubject('Maximum Auth Token 1')
     .setIssuer('name1')
@@ -229,7 +229,7 @@ it('should return 400 if the mac is invalid (subject is not correct)', async () 
   expect(await res.text()).toBe('invalid mac')
 })
 
-it('should return 400 if the mac is invalid (issue does not match)', async () => {
+it('returns 400 for invalid mac (mismatch issuer)', async () => {
   const mac = await new SignJWT({ callback: 'callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name2')
@@ -254,7 +254,7 @@ it('should return 400 if the mac is invalid (issue does not match)', async () =>
   expect(await res.text()).toBe('invalid mac')
 })
 
-it('should return 400 if the mac is invalid (audience is not correct)', async () => {
+it('returns 400 for invalid mac (incorrect audience)', async () => {
   const mac = await new SignJWT({ callback: 'callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
@@ -279,7 +279,7 @@ it('should return 400 if the mac is invalid (audience is not correct)', async ()
   expect(await res.text()).toBe('invalid mac')
 })
 
-it('should return 400 if the mac is invalid (expired)', async () => {
+it('returns 400 for invalid mac (expired)', async () => {
   const mac = await new SignJWT({ callback: 'callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
@@ -307,7 +307,7 @@ it('should return 400 if the mac is invalid (expired)', async () => {
   expect(await res.text()).toBe('invalid mac')
 }, 10000)
 
-it('should return 400 if the mac is invalid (key pair is not correct)', async () => {
+it('returns 400 for invalid mac (incorrect key pair)', async () => {
   const mac = await new SignJWT({ callback: 'callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name2')
@@ -332,7 +332,7 @@ it('should return 400 if the mac is invalid (key pair is not correct)', async ()
   expect(await res.text()).toBe('invalid mac')
 })
 
-it('should return 200 if everything is valid', async () => {
+it('returns 200 if everything is ok', async () => {
   const mac = await new SignJWT({ callback: 'callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
