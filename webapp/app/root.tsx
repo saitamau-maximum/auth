@@ -15,31 +15,19 @@ export function ErrorBoundary() {
   const error = useRouteError()
   if (isRouteErrorResponse(error)) {
     return (
-      <html lang='ja'>
-        <head>
-          <meta charSet='utf-8' />
-          <meta name='viewport' content='width=device-width, initial-scale=1' />
-          <Meta />
-          <Links />
-        </head>
-        <body>
-          <main>
-            <h1>
-              {error.status} - {error.statusText}
-            </h1>
-            <p>{error.data}</p>
-            <p>Are you trying malicious login? 🤔</p>
-            <p>&copy; Maximum - Programming Circle at Saitama University.</p>
-          </main>
-          <ScrollRestoration />
-          <Scripts />
-        </body>
-      </html>
+      <main>
+        <h1>
+          {error.status} - {error.statusText}
+        </h1>
+        <p>{error.data}</p>
+        <p>Are you trying malicious login? 🤔</p>
+        <p>&copy; Maximum - Programming Circle at Saitama University.</p>
+      </main>
     )
   }
 }
 
-export default function App() {
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='ja'>
       <head>
@@ -49,12 +37,16 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   )
+}
+
+export default function App() {
+  return <Outlet />
 }
 
 export const links: LinksFunction = () => [
