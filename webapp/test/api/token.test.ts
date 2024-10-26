@@ -83,7 +83,7 @@ it('should return 400 if the request body is not a valid JSON object', async () 
     body: 'invalid json',
   })
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('body is not a valid JSON object')
+  expect(await res.text()).toBe('Malformed JSON in request body')
 })
 
 it('should return 400 if the request body is missing the name field', async () => {
