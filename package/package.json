@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
+    "fix": "eslint --cache --cache-location ./node_modules/.cache/eslint --fix .",
     "test": "vitest --coverage --ui"
   },
   "repository": {
