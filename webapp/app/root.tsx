@@ -17,14 +17,36 @@ export function ErrorBoundary() {
   const error = useRouteError()
   if (isRouteErrorResponse(error)) {
     return (
-      <main>
-        <h1>
-          {error.status} - {error.statusText}
-        </h1>
-        <p>{error.data}</p>
-        <p>Are you trying malicious login? 🤔</p>
-        <p>&copy; Maximum - Programming Circle at Saitama University.</p>
-      </main>
+      <div
+        className={css({
+          display: 'grid',
+          placeItems: 'center',
+          height: '100dvh',
+          width: '100vw',
+        })}
+      >
+        <div
+          className={css({
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
+          })}
+        >
+          <h1
+            className={css({
+              fontSize: '4xl',
+              fontWeight: 'bold',
+              color: 'text',
+            })}
+          >
+            {error.status} - {error.statusText}
+          </h1>
+          <p>{error.data}</p>
+          <p>Are you trying malicious login? 🤔</p>
+          <p>&copy; Maximum - Programming Circle at Saitama University.</p>
+        </div>
+      </div>
     )
   }
 }
