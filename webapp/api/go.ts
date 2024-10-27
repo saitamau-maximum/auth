@@ -20,18 +20,9 @@ app.get(
     ) {
       return c.text('required query missing', 400)
     }
-    if (!URL.canParse(callback)) {
-      return c.text('invalid callback', 400)
-    }
 
-    const cbUrl = new URL(callback)
-    if (
-      (['username', 'password', 'search', 'hash'] as const).some(
-        key => cbUrl[key] !== '',
-      )
-    ) {
-      return c.text('cannot contain username, password, search, or hash', 400)
-    }
+    // callback の正当性は /token のほうでしている
+    // 改ざんされたら token 自体が無効になるので、ここではチェックしない
 
     return { name, pubkey, callback, token }
   }),

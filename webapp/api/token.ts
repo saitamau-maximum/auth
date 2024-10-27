@@ -34,6 +34,19 @@ app.post(
     const callback = value['callback'] as string
     const mac = value['mac'] as string
 
+    if (!URL.canParse(callback)) {
+      return c.text('invalid callback', 400)
+    }
+
+    const cbUrl = new URL(callback)
+    if (
+      (['username', 'password', 'search', 'hash'] as const).some(
+        key => cbUrl[key] !== '',
+      )
+    ) {
+      return c.text('cannot contain username, password, search, or hash', 400)
+    }
+
     return { name, pubkey, callback, mac }
   }),
   async c => {

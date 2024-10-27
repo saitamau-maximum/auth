@@ -134,6 +134,89 @@ it('returns 400 for mac-missing body', async () => {
   expect(await res.text()).toBe('required field missing')
 })
 
+it('returns 400 for invalid callback (not url)', async () => {
+  const res = await apiServer.request('/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'name',
+      pubkey: 'pubkey',
+      callback: 'callback',
+      mac: 'mac',
+    }),
+  })
+  expect(res.status).toBe(400)
+  expect(await res.text()).toBe('invalid callback')
+})
+
+it('returns 400 for invalid callback (containing username)', async () => {
+  const res = await apiServer.request('/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'name',
+      pubkey: 'pubkey',
+      callback: 'http://user:@example.com/callback',
+      mac: 'mac',
+    }),
+  })
+  expect(res.status).toBe(400)
+  expect(await res.text()).toBe(
+    'cannot contain username, password, search, or hash',
+  )
+})
+
+it('returns 400 for invalid callback (containing password)', async () => {
+  const res = await apiServer.request('/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'name',
+      pubkey: 'pubkey',
+      callback: 'http://user:pass@example.com/callback',
+      mac: 'mac',
+    }),
+  })
+  expect(res.status).toBe(400)
+  expect(await res.text()).toBe(
+    'cannot contain username, password, search, or hash',
+  )
+})
+
+it('returns 400 for invalid callback (containing search)', async () => {
+  const res = await apiServer.request('/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'name',
+      pubkey: 'pubkey',
+      callback: 'http://example.com/callback?foo',
+      mac: 'mac',
+    }),
+  })
+  expect(res.status).toBe(400)
+  expect(await res.text()).toBe(
+    'cannot contain username, password, search, or hash',
+  )
+})
+
+it('returns 400 for invalid callback (containing hash)', async () => {
+  const res = await apiServer.request('/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'name',
+      pubkey: 'pubkey',
+      callback: 'http://example.com/callback#bar',
+      mac: 'mac',
+    }),
+  })
+  expect(res.status).toBe(400)
+  expect(await res.text()).toBe(
+    'cannot contain username, password, search, or hash',
+  )
+})
+
 it('returns 400 for non-registered name', async () => {
   const res = await apiServer.request('/token', {
     method: 'POST',
@@ -141,7 +224,7 @@ it('returns 400 for non-registered name', async () => {
     body: JSON.stringify({
       name: 'name',
       pubkey: TEST_PUBKEY,
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac: 'mac',
     }),
   })
@@ -156,7 +239,7 @@ it('returns 400 for non-registered pubkey', async () => {
     body: JSON.stringify({
       name: 'name1',
       pubkey: 'pubkey',
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac: 'mac',
     }),
   })
@@ -171,7 +254,7 @@ it('returns 400 for non-registered name&pubkey pair', async () => {
     body: JSON.stringify({
       name: 'name1',
       pubkey: TEST_PUBKEY2,
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac: 'mac',
     }),
   })
@@ -180,7 +263,7 @@ it('returns 400 for non-registered name&pubkey pair', async () => {
 })
 
 it('returns 400 for invalid mac (mismatched callback)', async () => {
-  const mac = await new SignJWT({ callback: 'callback1' })
+  const mac = await new SignJWT({ callback: 'http://example.net/callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
     .setAudience('maximum-auth')
@@ -196,7 +279,7 @@ it('returns 400 for invalid mac (mismatched callback)', async () => {
     body: JSON.stringify({
       name: 'name1',
       pubkey: TEST_PUBKEY,
-      callback: 'callback2',
+      callback: 'http://example.com/callback',
       mac,
     }),
   })
@@ -205,7 +288,7 @@ it('returns 400 for invalid mac (mismatched callback)', async () => {
 })
 
 it('returns 400 for invalid mac (incorrect subject)', async () => {
-  const mac = await new SignJWT({ callback: 'callback' })
+  const mac = await new SignJWT({ callback: 'http://example.com/callback' })
     .setSubject('Maximum Auth Token 1')
     .setIssuer('name1')
     .setAudience('maximum-auth')
@@ -221,7 +304,7 @@ it('returns 400 for invalid mac (incorrect subject)', async () => {
     body: JSON.stringify({
       name: 'name1',
       pubkey: TEST_PUBKEY,
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac,
     }),
   })
@@ -230,7 +313,7 @@ it('returns 400 for invalid mac (incorrect subject)', async () => {
 })
 
 it('returns 400 for invalid mac (mismatch issuer)', async () => {
-  const mac = await new SignJWT({ callback: 'callback' })
+  const mac = await new SignJWT({ callback: 'http://example.com/callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name2')
     .setAudience('maximum-auth')
@@ -246,7 +329,7 @@ it('returns 400 for invalid mac (mismatch issuer)', async () => {
     body: JSON.stringify({
       name: 'name1',
       pubkey: TEST_PUBKEY,
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac,
     }),
   })
@@ -255,7 +338,7 @@ it('returns 400 for invalid mac (mismatch issuer)', async () => {
 })
 
 it('returns 400 for invalid mac (incorrect audience)', async () => {
-  const mac = await new SignJWT({ callback: 'callback' })
+  const mac = await new SignJWT({ callback: 'http://example.com/callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
     .setAudience('maximum-auth-foo')
@@ -271,7 +354,7 @@ it('returns 400 for invalid mac (incorrect audience)', async () => {
     body: JSON.stringify({
       name: 'name1',
       pubkey: TEST_PUBKEY,
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac,
     }),
   })
@@ -280,7 +363,7 @@ it('returns 400 for invalid mac (incorrect audience)', async () => {
 })
 
 it('returns 400 for invalid mac (expired)', async () => {
-  const mac = await new SignJWT({ callback: 'callback' })
+  const mac = await new SignJWT({ callback: 'http://example.com/callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
     .setAudience('maximum-auth')
@@ -299,7 +382,7 @@ it('returns 400 for invalid mac (expired)', async () => {
     body: JSON.stringify({
       name: 'name1',
       pubkey: TEST_PUBKEY,
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac,
     }),
   })
@@ -308,7 +391,7 @@ it('returns 400 for invalid mac (expired)', async () => {
 }, 10000)
 
 it('returns 400 for invalid mac (incorrect key pair)', async () => {
-  const mac = await new SignJWT({ callback: 'callback' })
+  const mac = await new SignJWT({ callback: 'http://example.com/callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name2')
     .setAudience('maximum-auth')
@@ -324,7 +407,7 @@ it('returns 400 for invalid mac (incorrect key pair)', async () => {
     body: JSON.stringify({
       name: 'name2',
       pubkey: TEST_PUBKEY2,
-      callback: 'callback',
+      callback: 'http://example.com/callback',
       mac,
     }),
   })
@@ -333,7 +416,7 @@ it('returns 400 for invalid mac (incorrect key pair)', async () => {
 })
 
 it('returns 200 if everything is ok', async () => {
-  const mac = await new SignJWT({ callback: 'callback' })
+  const mac = await new SignJWT({ callback: 'http://example.com/callback' })
     .setSubject('Maximum Auth Token')
     .setIssuer('name1')
     .setAudience('maximum-auth')
@@ -351,7 +434,7 @@ it('returns 200 if everything is ok', async () => {
       body: JSON.stringify({
         name: 'name1',
         pubkey: TEST_PUBKEY,
-        callback: 'callback',
+        callback: 'http://example.com/callback',
         mac,
       }),
     },
