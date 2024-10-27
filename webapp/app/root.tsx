@@ -9,6 +9,8 @@ import {
   useRouteError,
 } from '@remix-run/react'
 
+import { css } from '@styled-system/css'
+
 import styles from './index.css?url'
 
 export function ErrorBoundary() {
@@ -36,7 +38,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body
+        className={css({
+          bg: 'gray.50',
+        })}
+      >
         {children}
         <ScrollRestoration />
         <Scripts />

@@ -1,5 +1,13 @@
 import { defineConfig } from '@pandacss/dev'
 
+//   background: linear-gradient(to left top, #62c077, #34aa8e);
+//   color: #ffffff;
+// }
+
+// .cancelBtn {
+//   border: #4bb583 solid 1px;
+//   color: #4bb583;
+
 export default defineConfig({
   // Whether to use css reset
   preflight: true,
@@ -12,7 +20,27 @@ export default defineConfig({
 
   // Useful for theme customization
   theme: {
-    extend: {},
+    extend: {
+      tokens: {
+        gradients: {
+          primary: {
+            value: {
+              type: 'linear',
+              placement: 'to left top',
+              stops: [
+                { color: '#62c077', position: 0 },
+                { color: '#34aa8e', position: 100 },
+              ],
+            },
+          },
+        },
+        colors: {
+          primary: {
+            value: '#4bb583',
+          },
+        },
+      },
+    },
   },
 
   // The output directory for your css system
