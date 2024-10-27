@@ -11,7 +11,7 @@ import rootConfig from '../eslint.config.mjs'
 
 export default tseslint.config(
   {
-    ignores: ['public/build', '.cache', '.wrangler', 'coverage', 'functions'],
+    ignores: ['build', '.cache', '.wrangler', 'coverage', 'functions', 'styled-system'],
   },
   eslint.configs.recommended,
   ...rootConfig,
