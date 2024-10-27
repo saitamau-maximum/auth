@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import type {
   ActionFunction,
   LoaderFunctionArgs,
@@ -12,13 +10,13 @@ import {
   importKey,
   keypairProtectedHeader,
 } from '@saitamau-maximum/auth/internal'
-import clsx from 'clsx'
 import { SignJWT } from 'jose'
+import cookieSessionStorage from 'utils/session.server'
 
 import pubkeyData from '../../../data/pubkey.json'
-import cookieSessionStorage from '../../../utils/session.server'
 
-import style from './style.module.css'
+import { CenterCard } from './_components/center-card'
+import { ProfileDisplay } from './_components/profile-display'
 
 export const action: ActionFunction = () =>
   new Response('method not allowed', { status: 405 })
@@ -29,8 +27,15 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const { getSession } = cookieSessionStorage(envvar)
   const session = await getSession(request.headers.get('Cookie'))
 
-  const cburl = session.get('continue_to')!
-  const cbname = decodeURIComponent(session.get('continue_name')!)
+  const cburl = session.get('continue_to')
+  if (cburl == null) {
+    throw new Response('invalid request', { status: 400 })
+  }
+  let cbname = session.get('continue_name')
+  if (cbname == null) {
+    throw new Response('invalid request', { status: 400 })
+  }
+  cbname = decodeURIComponent(cbname)
 
   const registeredData = pubkeyData.find(data => data.name === cbname)
 
@@ -75,59 +80,17 @@ export default function Continue() {
   cancelUrl.searchParams.set('cancel', 'true')
 
   return (
-    <main className={style.main}>
-      <div className={style.container}>
-        <div className={style.left}>
-          <img
-            src='/logo.svg'
-            alt='Maximum Logo'
-            width={200}
-            height={50}
-            className={style.logo}
-          />
-          <div className={style.profile}>
-            <img
-              src={data.userdata.profile_image}
-              alt='Profile'
-              className={style.profileImg}
-            />
-            <p className={style.profileName}>{data.userdata.display_name}</p>
-          </div>
-        </div>
-        <div className={style.right}>
-          {data.userdata.is_member ? (
-            <>
-              <p className={style.loginMsg}>以下のサイトにログインします。</p>
-              <p className={style.serviceDetail}>
-                <span className={style.serviceName}>{data.appdata.name}</span>
-                <br />
-                <span className={style.serviceUrl}>({continueUrl.origin})</span>
-              </p>
-              <a
-                href={continueUrl.toString()}
-                className={clsx(style.btn, style.continueBtn)}
-              >
-                続ける
-              </a>
-              <a
-                href={cancelUrl.toString()}
-                className={clsx(style.btn, style.cancelBtn)}
-              >
-                やめる
-              </a>
-            </>
-          ) : (
-            <>
-              <p>
-                Maximum メンバーではないため、
-                <br />
-                続行できません。
-              </p>
-              <p>このタブを閉じてください。</p>
-            </>
-          )}
-        </div>
-      </div>
-    </main>
+    <CenterCard>
+      <ProfileDisplay
+        cancelUrl={cancelUrl}
+        continueUrl={continueUrl}
+        user={{
+          displayName: data.userdata.display_name,
+          profileImage: data.userdata.profile_image,
+          isMember: data.userdata.is_member,
+        }}
+        appName={data.appdata.name}
+      />
+    </CenterCard>
   )
 }

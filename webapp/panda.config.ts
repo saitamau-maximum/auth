@@ -12,7 +12,27 @@ export default defineConfig({
 
   // Useful for theme customization
   theme: {
-    extend: {},
+    extend: {
+      tokens: {
+        gradients: {
+          primary: {
+            value: {
+              type: 'linear',
+              placement: 'to left top',
+              stops: [
+                { color: '#62c077', position: 0 },
+                { color: '#34aa8e', position: 100 },
+              ],
+            },
+          },
+        },
+        colors: {
+          primary: {
+            value: '#4bb583',
+          },
+        },
+      },
+    },
   },
 
   // The output directory for your css system
