@@ -29,18 +29,18 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
   const cburl = session.get('continue_to')
   if (cburl == null) {
-    throw new Response('invalid request', { status: 400 })
+    throw json('invalid request', { status: 400 })
   }
   let cbname = session.get('continue_name')
   if (cbname == null) {
-    throw new Response('invalid request', { status: 400 })
+    throw json('invalid request', { status: 400 })
   }
   cbname = decodeURIComponent(cbname)
 
   const registeredData = pubkeyData.find(data => data.name === cbname)
 
   if (registeredData === undefined) {
-    throw new Response('invalid request', { status: 400 })
+    throw json('invalid request', { status: 400 })
   }
 
   const privkey = await importKey(context.cloudflare.env.PRIVKEY, 'privateKey')
