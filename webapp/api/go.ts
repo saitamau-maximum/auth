@@ -3,7 +3,6 @@ import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import cookieSessionStorage from 'utils/session.server'
 
-import pubkeyData from '../data/pubkey.json'
 import { Env } from '../load-context'
 
 const app = new Hono<{ Bindings: Env }>()
@@ -12,13 +11,14 @@ app.get(
   '/',
   validator('query', (value, c) => {
     const { name, pubkey, callback, token } = value
+
     if (
       typeof name !== 'string' ||
       typeof pubkey !== 'string' ||
       typeof callback !== 'string' ||
       typeof token !== 'string'
     ) {
-      return c.text('required query missing', 400)
+      return c.text('required field missing', 400)
     }
 
     // callback の正当性は /token のほうでしている
@@ -29,18 +29,7 @@ app.get(
   async c => {
     const { name, pubkey, callback, token } = c.req.valid('query')
 
-    const registeredData = pubkeyData.find(
-      regdata => regdata.name === name && regdata.pubkey === pubkey,
-    )
-    if (registeredData === undefined) {
-      return c.text('data not found', 400)
-    }
-
-    try {
-      await importKey(registeredData.pubkey, 'publicKey')
-    } catch (_) {
-      throw new Response('invalid pubkey', { status: 400 })
-    }
+    // name, pubkey の正当性も /token のほうでしている
 
     const key = await importKey(c.env.SYMKEY, 'symmetric')
     const [isvalid, message] = await verifyToken({
