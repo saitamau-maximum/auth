@@ -9,37 +9,49 @@ import {
   useRouteError,
 } from '@remix-run/react'
 
-import './global.css'
+import { css } from '@styled-system/css'
+
+import styles from './index.css?url'
 
 export function ErrorBoundary() {
   const error = useRouteError()
   if (isRouteErrorResponse(error)) {
     return (
-      <html lang='ja'>
-        <head>
-          <meta charSet='utf-8' />
-          <meta name='viewport' content='width=device-width, initial-scale=1' />
-          <Meta />
-          <Links />
-        </head>
-        <body>
-          <main>
-            <h1>
-              {error.status} - {error.statusText}
-            </h1>
-            <p>{error.data}</p>
-            <p>Are you trying malicious login? 🤔</p>
-            <p>&copy; Maximum - Programming Circle at Saitama University.</p>
-          </main>
-          <ScrollRestoration />
-          <Scripts />
-        </body>
-      </html>
+      <div
+        className={css({
+          display: 'grid',
+          placeItems: 'center',
+          height: '100dvh',
+          width: '100vw',
+        })}
+      >
+        <div
+          className={css({
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
+          })}
+        >
+          <h1
+            className={css({
+              fontSize: '4xl',
+              fontWeight: 'bold',
+              color: 'text',
+            })}
+          >
+            {error.status} - {error.statusText}
+          </h1>
+          <p>{error.data}</p>
+          <p>Are you trying malicious login? 🤔</p>
+          <p>&copy; Maximum - Programming Circle at Saitama University.</p>
+        </div>
+      </div>
     )
   }
 }
 
-export default function App() {
+export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='ja'>
       <head>
@@ -48,8 +60,12 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
-        <Outlet />
+      <body
+        className={css({
+          bg: 'gray.50',
+        })}
+      >
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -57,7 +73,12 @@ export default function App() {
   )
 }
 
+export default function App() {
+  return <Outlet />
+}
+
 export const links: LinksFunction = () => [
+  { rel: 'stylesheet', href: styles },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
