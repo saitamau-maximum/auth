@@ -1,7 +1,7 @@
 import type { AppLoadContext } from '@remix-run/cloudflare'
 import { createCookieSessionStorage } from '@remix-run/cloudflare'
 
-interface SessionData {
+export interface SessionData {
   id: string
   display_name: string
   profile_image: string
@@ -9,7 +9,7 @@ interface SessionData {
   is_member: boolean
 }
 
-interface SessionFlashData {
+export interface SessionFlashData {
   state: string
   continue_to: string
   continue_name: string

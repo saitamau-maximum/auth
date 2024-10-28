@@ -1,6 +1,6 @@
 import { type PlatformProxy } from 'wrangler'
 
-interface Env {
+export interface Env {
   GITHUB_APP_ID: string
   GITHUB_APP_PRIVKEY: string
   GITHUB_OAUTH_ID: string
