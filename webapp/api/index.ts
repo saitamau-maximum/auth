@@ -11,6 +11,8 @@ const app = new Hono<{ Bindings: Env }>()
 
 app.use(secureHeaders())
 
+// 使い方をそのまま: https://github.com/yusukebe/hono-remix-adapter/blob/main/README.md
+// Remix の Route になかったら Hono の Route を探すみたいなことしてそう
 app.use(async (c, next) => {
   await next()
 })
