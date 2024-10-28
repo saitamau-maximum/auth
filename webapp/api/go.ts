@@ -2,6 +2,7 @@ import { importKey, verifyToken } from '@saitamau-maximum/auth/internal'
 import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import cookieSessionStorage from 'utils/session.server'
+import { z } from 'zod'
 
 import { Env } from '../load-context'
 
@@ -10,21 +11,20 @@ const app = new Hono<{ Bindings: Env }>()
 app.get(
   '/',
   validator('query', (value, c) => {
-    const { name, pubkey, callback, token } = value
+    const schema = z.object({
+      name: z.string(),
+      pubkey: z.string(),
+      callback: z.string(),
+      token: z.string(),
+    })
+    const parsed = schema.safeParse(value)
 
-    if (
-      typeof name !== 'string' ||
-      typeof pubkey !== 'string' ||
-      typeof callback !== 'string' ||
-      typeof token !== 'string'
-    ) {
-      return c.text('required field missing', 400)
-    }
+    if (!parsed.success) return c.text('invalid request', 400)
 
     // callback の正当性は /token のほうでしている
     // 改ざんされたら token 自体が無効になるので、ここではチェックしない
 
-    return { name, pubkey, callback, token }
+    return parsed.data
   }),
   async c => {
     const { name, pubkey, callback, token } = c.req.valid('query')

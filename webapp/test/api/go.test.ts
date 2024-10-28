@@ -61,7 +61,7 @@ it('returns 400 if missing name', async () => {
 
   const res = await apiServer.request('/go?' + param.toString())
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toBe('invalid request')
 })
 
 it('returns 400 if missing pubkey', async () => {
@@ -82,7 +82,7 @@ it('returns 400 if missing pubkey', async () => {
 
   const res = await apiServer.request('/go?' + param.toString())
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toBe('invalid request')
 })
 
 it('returns 400 if missing callback', async () => {
@@ -103,7 +103,7 @@ it('returns 400 if missing callback', async () => {
 
   const res = await apiServer.request('/go?' + param.toString())
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toBe('invalid request')
 })
 
 it('returns 400 if missing token', async () => {
@@ -118,7 +118,7 @@ it('returns 400 if missing token', async () => {
 
   const res = await apiServer.request('/go?' + param.toString())
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toBe('invalid request')
 })
 
 it('returns 400 for tampered token (token)', async () => {

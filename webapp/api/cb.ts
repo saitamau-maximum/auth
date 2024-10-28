@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import { Octokit } from 'octokit'
 import cookieSessionStorage from 'utils/session.server'
+import { z } from 'zod'
 
 import { Env } from '../load-context'
 
@@ -17,13 +18,15 @@ interface GitHubOAuthTokenResponse {
 app.get(
   '/',
   validator('query', (value, c) => {
-    const { code, state } = value
+    const schema = z.object({
+      code: z.string(),
+      state: z.string(),
+    })
+    const parsed = schema.safeParse(value)
 
-    if (typeof code !== 'string' || typeof state !== 'string') {
-      return c.text('invalid request', 400)
-    }
+    if (!parsed.success) return c.text('invalid request', 400)
 
-    return { code, state }
+    return parsed.data
   }),
   async c => {
     const { code, state } = c.req.valid('query')
