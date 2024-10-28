@@ -50,7 +50,13 @@ app.get(
           code,
         }),
       },
-    ).then(res => res.json<GitHubOAuthTokenResponse>())
+    )
+      .then(res => res.json<GitHubOAuthTokenResponse>())
+      .catch(() => ({ access_token: null }))
+
+    if (!access_token) {
+      return c.text('invalid code', 400)
+    }
 
     // ----- メンバーの所属判定 ----- //
     const userOctokit = new Octokit({ auth: access_token })
