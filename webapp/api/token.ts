@@ -6,6 +6,7 @@ import {
 import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import { jwtVerify } from 'jose'
+import { z } from 'zod'
 
 import pubkeyData from '../data/pubkey.json'
 import { Env } from '../load-context'
@@ -21,22 +22,19 @@ app.post(
     return value
   }),
   validator('json', (value, c) => {
-    if (
-      (['name', 'pubkey', 'callback', 'mac'] as const).some(
-        key => !value[key] || typeof value[key] !== 'string',
-      )
-    ) {
-      return c.text('required field missing', 400)
-    }
+    const schema = z.object({
+      name: z.string(),
+      pubkey: z.string(),
+      callback: z.string(),
+      mac: z.string(),
+    })
+    const parsed = schema.safeParse(value)
 
-    const name = value['name'] as string
-    const pubkey = value['pubkey'] as string
-    const callback = value['callback'] as string
-    const mac = value['mac'] as string
+    if (!parsed.success) return c.text('required field missing', 400)
 
-    if (!URL.canParse(callback)) {
-      return c.text('invalid callback', 400)
-    }
+    const { callback } = parsed.data
+
+    if (!URL.canParse(callback)) return c.text('invalid callback', 400)
 
     const cbUrl = new URL(callback)
     if (
@@ -47,7 +45,7 @@ app.post(
       return c.text('cannot contain username, password, search, or hash', 400)
     }
 
-    return { name, pubkey, callback, mac }
+    return parsed.data
   }),
   async c => {
     const data = c.req.valid('json')
