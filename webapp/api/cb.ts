@@ -8,6 +8,12 @@ import { Env } from '../load-context'
 
 const app = new Hono<{ Bindings: Env }>()
 
+interface GitHubOAuthTokenResponse {
+  access_token: string
+  scope: string
+  token_type: string
+}
+
 app.get(
   '/',
   validator('query', (value, c) => {
@@ -28,12 +34,6 @@ app.get(
     if (state !== session.get('state')) {
       c.header('Set-Cookie', await commitSession(session))
       return c.text('state mismatch', 400)
-    }
-
-    interface GitHubOAuthTokenResponse {
-      access_token: string
-      scope: string
-      token_type: string
     }
 
     const { access_token } = await fetch(
