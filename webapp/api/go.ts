@@ -1,6 +1,6 @@
+import { zValidator } from '@hono/zod-validator'
 import { importKey, verifyToken } from '@saitamau-maximum/auth/internal'
 import { Hono } from 'hono'
-import { validator } from 'hono/validator'
 import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
 
@@ -10,26 +10,20 @@ const app = new Hono<{ Bindings: Env }>()
 
 app.get(
   '/',
-  validator('query', (value, c) => {
-    const schema = z.object({
+  zValidator(
+    'query',
+    z.object({
       name: z.string(),
       pubkey: z.string(),
       callback: z.string(),
       token: z.string(),
-    })
-    const parsed = schema.safeParse(value)
-
-    if (!parsed.success) return c.text('invalid request', 400)
-
-    // callback の正当性は /token のほうでしている
-    // 改ざんされたら token 自体が無効になるので、ここではチェックしない
-
-    return parsed.data
-  }),
+    }),
+  ),
   async c => {
     const { name, pubkey, callback, token } = c.req.valid('query')
 
-    // name, pubkey の正当性も /token のほうでしている
+    // name, pubkey, callback の正当性は /token のほうでしている
+    // 改ざんされたら token 自体が無効になるので、ここではチェックしない
 
     const key = await importKey(c.env.SYMKEY, 'symmetric')
     const [isvalid, message] = await verifyToken({

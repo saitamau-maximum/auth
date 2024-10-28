@@ -72,6 +72,9 @@ importers:
 
   webapp:
     dependencies:
+      '@hono/zod-validator':
+        specifier: ^0.4.1
+        version: 0.4.1(hono@4.6.7)(zod@3.23.8)
       '@octokit/auth-app':
         specifier: ^7.1.1
         version: 7.1.1
@@ -1351,6 +1354,12 @@ packages:
         optional: true
       wrangler:
         optional: true
+
+  '@hono/zod-validator@0.4.1':
+    resolution: {integrity: sha512-I8LyfeJfvVmC5hPjZ2Iij7RjexlgSBT7QJudZ4JvNPLxn0JQ3sqclz2zydlwISAnw21D2n4LQ0nfZdoiv9fQQA==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.19.1
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -6397,6 +6406,11 @@ snapshots:
     optionalDependencies:
       miniflare: 3.20240925.0
       wrangler: 3.78.10(@cloudflare/workers-types@4.20240925.0)
+
+  '@hono/zod-validator@0.4.1(hono@4.6.7)(zod@3.23.8)':
+    dependencies:
+      hono: 4.6.7
+      zod: 3.23.8
 
   '@humanwhocodes/module-importer@1.0.1': {}
 

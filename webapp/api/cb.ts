@@ -1,6 +1,6 @@
+import { zValidator } from '@hono/zod-validator'
 import { createAppAuth } from '@octokit/auth-app'
 import { Hono } from 'hono'
-import { validator } from 'hono/validator'
 import { Octokit } from 'octokit'
 import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
@@ -17,17 +17,7 @@ interface GitHubOAuthTokenResponse {
 
 app.get(
   '/',
-  validator('query', (value, c) => {
-    const schema = z.object({
-      code: z.string(),
-      state: z.string(),
-    })
-    const parsed = schema.safeParse(value)
-
-    if (!parsed.success) return c.text('invalid request', 400)
-
-    return parsed.data
-  }),
+  zValidator('query', z.object({ code: z.string(), state: z.string() })),
   async c => {
     const { code, state } = c.req.valid('query')
 

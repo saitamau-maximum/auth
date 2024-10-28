@@ -142,7 +142,7 @@ it('returns 400 if missing code', async () => {
 
   const res = await apiServer.request('/cb?' + param.toString())
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('invalid request')
+  expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 if missing state', async () => {
@@ -151,7 +151,7 @@ it('returns 400 if missing state', async () => {
 
   const res = await apiServer.request('/cb?' + param.toString())
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('invalid request')
+  expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for mismatch state', async () => {

@@ -97,7 +97,7 @@ it('returns 400 for name-missing body', async () => {
     }),
   })
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for pubkey-missing body', async () => {
@@ -107,7 +107,7 @@ it('returns 400 for pubkey-missing body', async () => {
     body: JSON.stringify({ name: 'name', callback: 'callback', mac: 'mac' }),
   })
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for callback-missing body', async () => {
@@ -117,7 +117,7 @@ it('returns 400 for callback-missing body', async () => {
     body: JSON.stringify({ name: 'name', pubkey: 'pubkey', mac: 'mac' }),
   })
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for mac-missing body', async () => {
@@ -131,7 +131,7 @@ it('returns 400 for mac-missing body', async () => {
     }),
   })
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('required field missing')
+  expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for invalid callback (not url)', async () => {
@@ -146,7 +146,7 @@ it('returns 400 for invalid callback (not url)', async () => {
     }),
   })
   expect(res.status).toBe(400)
-  expect(await res.text()).toBe('invalid callback')
+  expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for invalid callback (containing username)', async () => {

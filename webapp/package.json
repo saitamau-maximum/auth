@@ -26,6 +26,7 @@
     "apply:migrations:prod": "wrangler d1 migrations apply --remote maximum-idp-db"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.4.1",
     "@octokit/auth-app": "^7.1.1",
     "@remix-run/cloudflare": "^2.13.1",
     "@remix-run/cloudflare-pages": "^2.13.1",
