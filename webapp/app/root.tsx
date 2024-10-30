@@ -11,7 +11,8 @@ import {
 
 import { css } from '@styled-system/css'
 
-import styles from './index.css?url'
+// NOTE: 正規のやり方ではないので若干のパフォーマンス低下がある。https://github.com/remix-run/remix/issues/9451 にて報告済み（未解決）
+import './index.css'
 
 export function ErrorBoundary() {
   const error = useRouteError()
@@ -78,7 +79,6 @@ export default function App() {
 }
 
 export const links: LinksFunction = () => [
-  { rel: 'stylesheet', href: styles },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
