@@ -1,12 +1,11 @@
 import { zValidator } from '@hono/zod-validator'
 import { importKey, verifyToken } from '@saitamau-maximum/auth/internal'
 import { Hono } from 'hono'
+import { HonoEnv } from 'load-context'
 import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
 
-import { Env } from '../load-context'
-
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<HonoEnv>()
 
 app.get(
   '/',

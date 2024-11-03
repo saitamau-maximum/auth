@@ -7,12 +7,12 @@ import {
 import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import { jwtVerify } from 'jose'
+import { HonoEnv } from 'load-context'
 import { z } from 'zod'
 
 import pubkeyData from '../data/pubkey.json'
-import { Env } from '../load-context'
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<HonoEnv>()
 
 app.post(
   '/',

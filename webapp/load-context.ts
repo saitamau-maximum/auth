@@ -1,3 +1,4 @@
+import { DrizzleD1Database } from 'drizzle-orm/d1'
 import { type PlatformProxy } from 'wrangler'
 
 export interface Env {
@@ -10,6 +11,13 @@ export interface Env {
   SESSION_SECRET: string
   CF_PAGES_URL: string
   DB: D1Database
+}
+
+export interface HonoEnv {
+  Bindings: Env
+  Variables: {
+    client: DrizzleD1Database
+  }
 }
 
 type Cloudflare = Omit<PlatformProxy<Env>, 'dispose'>

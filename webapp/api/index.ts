@@ -1,19 +1,26 @@
+import { drizzle } from 'drizzle-orm/d1'
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
-
-import { Env } from '../load-context'
+import { HonoEnv } from 'load-context'
 
 import cbRoute from './cb'
 import goRoute from './go'
 import tokenRoute from './token'
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<HonoEnv>()
 
 app.use(secureHeaders())
 
 // 使い方をそのまま: https://github.com/yusukebe/hono-remix-adapter/blob/main/README.md
 // Remix の Route になかったら Hono の Route を探すみたいなことしてそう
 app.use(async (c, next) => {
+  await next()
+})
+
+app.use(async (c, next) => {
+  const client = drizzle(c.env.DB)
+  c.set('client', client)
+
   await next()
 })
 
