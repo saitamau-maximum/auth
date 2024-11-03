@@ -15,29 +15,34 @@ const MOCK_ENV = {
   CF_PAGES_URL: 'https://example.com',
   SESSION_SECRET: 'secret',
   GITHUB_OAUTH_ID: 'github_oauth_id',
+  DB: {},
 }
 
 it('returns 405 if method != GET', async () => {
-  const res1 = await apiServer.request('/go', { method: 'POST' })
+  const res1 = await apiServer.request('/go', { method: 'POST' }, MOCK_ENV)
   expect(res1.status).toBe(405)
 
   // HEAD は GET 時の header を返す method なので許容
-  // const res2 = await apiServer.request('/go', { method: 'HEAD' })
+  // const res2 = await apiServer.request('/go', { method: 'HEAD' }, MOCK_ENV)
   // expect(res2.status).toBe(405)
 
-  const res3 = await apiServer.request('/go', { method: 'PUT' })
+  const res3 = await apiServer.request('/go', { method: 'PUT' }, MOCK_ENV)
   expect(res3.status).toBe(405)
 
-  const res4 = await apiServer.request('/go', { method: 'DELETE' })
+  const res4 = await apiServer.request('/go', { method: 'DELETE' }, MOCK_ENV)
   expect(res4.status).toBe(405)
 
-  const res5 = await apiServer.request('/go', { method: 'OPTIONS' })
+  const res5 = await apiServer.request('/go', { method: 'OPTIONS' }, MOCK_ENV)
   expect(res5.status).toBe(405)
 
-  const res6 = await apiServer.request('/go', { method: 'PATCH' })
+  const res6 = await apiServer.request('/go', { method: 'PATCH' }, MOCK_ENV)
   expect(res6.status).toBe(405)
 
-  const res7 = await apiServer.request('/go', { method: 'MYCUSTOMMETHOD' })
+  const res7 = await apiServer.request(
+    '/go',
+    { method: 'MYCUSTOMMETHOD' },
+    MOCK_ENV,
+  )
   expect(res7.status).toBe(405)
 
   // connect and trace are not supported by Hono
@@ -59,7 +64,7 @@ it('returns 400 if missing name', async () => {
   param.set('callback', callback)
   param.set('token', token)
 
-  const res = await apiServer.request('/go?' + param.toString())
+  const res = await apiServer.request('/go?' + param.toString(), {}, MOCK_ENV)
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
@@ -80,7 +85,7 @@ it('returns 400 if missing pubkey', async () => {
   param.set('callback', callback)
   param.set('token', token)
 
-  const res = await apiServer.request('/go?' + param.toString())
+  const res = await apiServer.request('/go?' + param.toString(), {}, MOCK_ENV)
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
@@ -101,7 +106,7 @@ it('returns 400 if missing callback', async () => {
   param.set('pubkey', pubkey)
   param.set('token', token)
 
-  const res = await apiServer.request('/go?' + param.toString())
+  const res = await apiServer.request('/go?' + param.toString(), {}, MOCK_ENV)
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
@@ -116,7 +121,7 @@ it('returns 400 if missing token', async () => {
   param.set('pubkey', pubkey)
   param.set('callback', callback)
 
-  const res = await apiServer.request('/go?' + param.toString())
+  const res = await apiServer.request('/go?' + param.toString(), {}, MOCK_ENV)
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })

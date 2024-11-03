@@ -1,13 +1,12 @@
 import { zValidator } from '@hono/zod-validator'
 import { createAppAuth } from '@octokit/auth-app'
 import { Hono } from 'hono'
+import { HonoEnv } from 'load-context'
 import { Octokit } from 'octokit'
 import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
 
-import { Env } from '../load-context'
-
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<HonoEnv>()
 
 interface GitHubOAuthTokenResponse {
   access_token: string

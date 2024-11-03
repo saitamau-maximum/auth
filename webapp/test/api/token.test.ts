@@ -40,126 +40,167 @@ vi.mock('../../data/pubkey.json', () => ({
 const MOCK_ENV = {
   SYMKEY:
     'eyJrZXlfb3BzIjpbImVuY3J5cHQiLCJkZWNyeXB0Il0sImV4dCI6dHJ1ZSwia3R5Ijoib2N0IiwiayI6IlAzZmdPZWRNM2d4OGV0RFdpZG1zVGE0UnphcEtmQ1o4azdVTi0zUjhSVjQiLCJhbGciOiJBMjU2R0NNIn0=',
+  DB: {},
 }
 
 it('returns 405 if method != POST', async () => {
-  const res1 = await apiServer.request('/token', { method: 'GET' })
+  const res1 = await apiServer.request('/token', { method: 'GET' }, MOCK_ENV)
   expect(res1.status).toBe(405)
 
-  const res2 = await apiServer.request('/token', { method: 'HEAD' })
+  const res2 = await apiServer.request('/token', { method: 'HEAD' }, MOCK_ENV)
   expect(res2.status).toBe(405)
 
-  const res3 = await apiServer.request('/token', { method: 'PUT' })
+  const res3 = await apiServer.request('/token', { method: 'PUT' }, MOCK_ENV)
   expect(res3.status).toBe(405)
 
-  const res4 = await apiServer.request('/token', { method: 'DELETE' })
+  const res4 = await apiServer.request('/token', { method: 'DELETE' }, MOCK_ENV)
   expect(res4.status).toBe(405)
 
-  const res5 = await apiServer.request('/token', { method: 'OPTIONS' })
+  const res5 = await apiServer.request(
+    '/token',
+    { method: 'OPTIONS' },
+    MOCK_ENV,
+  )
   expect(res5.status).toBe(405)
 
-  const res6 = await apiServer.request('/token', { method: 'PATCH' })
+  const res6 = await apiServer.request('/token', { method: 'PATCH' }, MOCK_ENV)
   expect(res6.status).toBe(405)
 
-  const res7 = await apiServer.request('/token', { method: 'MYCUSTOMMETHOD' })
+  const res7 = await apiServer.request(
+    '/token',
+    { method: 'MYCUSTOMMETHOD' },
+    MOCK_ENV,
+  )
   expect(res7.status).toBe(405)
 
   // connect and trace are not supported by Hono
 })
 
 it('returns 400 if Content-Type != application/json', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('body must be application/json')
 })
 
 it('returns 400 if body is not JSON', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: 'invalid json',
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'invalid json',
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('Malformed JSON in request body')
 })
 
 it('returns 400 for name-missing body', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      pubkey: 'pubkey',
-      callback: 'callback',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pubkey: 'pubkey',
+        callback: 'callback',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for pubkey-missing body', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: 'name', callback: 'callback', mac: 'mac' }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'name', callback: 'callback', mac: 'mac' }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for callback-missing body', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: 'name', pubkey: 'pubkey', mac: 'mac' }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'name', pubkey: 'pubkey', mac: 'mac' }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for mac-missing body', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name',
-      pubkey: 'pubkey',
-      callback: 'callback',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name',
+        pubkey: 'pubkey',
+        callback: 'callback',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for invalid callback (not url)', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name',
-      pubkey: 'pubkey',
-      callback: 'callback',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name',
+        pubkey: 'pubkey',
+        callback: 'callback',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
 
 it('returns 400 for invalid callback (containing username)', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name',
-      pubkey: 'pubkey',
-      callback: 'http://user:@example.com/callback',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name',
+        pubkey: 'pubkey',
+        callback: 'http://user:@example.com/callback',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe(
     'cannot contain username, password, search, or hash',
@@ -167,16 +208,20 @@ it('returns 400 for invalid callback (containing username)', async () => {
 })
 
 it('returns 400 for invalid callback (containing password)', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name',
-      pubkey: 'pubkey',
-      callback: 'http://user:pass@example.com/callback',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name',
+        pubkey: 'pubkey',
+        callback: 'http://user:pass@example.com/callback',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe(
     'cannot contain username, password, search, or hash',
@@ -184,16 +229,20 @@ it('returns 400 for invalid callback (containing password)', async () => {
 })
 
 it('returns 400 for invalid callback (containing search)', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name',
-      pubkey: 'pubkey',
-      callback: 'http://example.com/callback?foo',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name',
+        pubkey: 'pubkey',
+        callback: 'http://example.com/callback?foo',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe(
     'cannot contain username, password, search, or hash',
@@ -201,16 +250,20 @@ it('returns 400 for invalid callback (containing search)', async () => {
 })
 
 it('returns 400 for invalid callback (containing hash)', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name',
-      pubkey: 'pubkey',
-      callback: 'http://example.com/callback#bar',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name',
+        pubkey: 'pubkey',
+        callback: 'http://example.com/callback#bar',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe(
     'cannot contain username, password, search, or hash',
@@ -218,46 +271,58 @@ it('returns 400 for invalid callback (containing hash)', async () => {
 })
 
 it('returns 400 for non-registered name', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name',
-      pubkey: TEST_PUBKEY,
-      callback: 'http://example.com/callback',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name',
+        pubkey: TEST_PUBKEY,
+        callback: 'http://example.com/callback',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('data not found')
 })
 
 it('returns 400 for non-registered pubkey', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name1',
-      pubkey: 'pubkey',
-      callback: 'http://example.com/callback',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name1',
+        pubkey: 'pubkey',
+        callback: 'http://example.com/callback',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('data not found')
 })
 
 it('returns 400 for non-registered name&pubkey pair', async () => {
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name1',
-      pubkey: TEST_PUBKEY2,
-      callback: 'http://example.com/callback',
-      mac: 'mac',
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name1',
+        pubkey: TEST_PUBKEY2,
+        callback: 'http://example.com/callback',
+        mac: 'mac',
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('data not found')
 })
@@ -273,16 +338,20 @@ it('returns 400 for invalid mac (mismatched callback)', async () => {
     .setProtectedHeader(keypairProtectedHeader)
     .sign(TEST_PRIVKEY)
 
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name1',
-      pubkey: TEST_PUBKEY,
-      callback: 'http://example.com/callback',
-      mac,
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name1',
+        pubkey: TEST_PUBKEY,
+        callback: 'http://example.com/callback',
+        mac,
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('invalid mac')
 })
@@ -298,16 +367,20 @@ it('returns 400 for invalid mac (incorrect subject)', async () => {
     .setProtectedHeader(keypairProtectedHeader)
     .sign(TEST_PRIVKEY)
 
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name1',
-      pubkey: TEST_PUBKEY,
-      callback: 'http://example.com/callback',
-      mac,
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name1',
+        pubkey: TEST_PUBKEY,
+        callback: 'http://example.com/callback',
+        mac,
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('invalid mac')
 })
@@ -323,16 +396,20 @@ it('returns 400 for invalid mac (mismatch issuer)', async () => {
     .setProtectedHeader(keypairProtectedHeader)
     .sign(TEST_PRIVKEY)
 
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name1',
-      pubkey: TEST_PUBKEY,
-      callback: 'http://example.com/callback',
-      mac,
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name1',
+        pubkey: TEST_PUBKEY,
+        callback: 'http://example.com/callback',
+        mac,
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('invalid mac')
 })
@@ -348,16 +425,20 @@ it('returns 400 for invalid mac (incorrect audience)', async () => {
     .setProtectedHeader(keypairProtectedHeader)
     .sign(TEST_PRIVKEY)
 
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name1',
-      pubkey: TEST_PUBKEY,
-      callback: 'http://example.com/callback',
-      mac,
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name1',
+        pubkey: TEST_PUBKEY,
+        callback: 'http://example.com/callback',
+        mac,
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('invalid mac')
 })
@@ -376,16 +457,20 @@ it('returns 400 for invalid mac (expired)', async () => {
   // tolerance 5sec 考慮で 7sec
   await new Promise(resolve => setTimeout(resolve, 7000))
 
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name1',
-      pubkey: TEST_PUBKEY,
-      callback: 'http://example.com/callback',
-      mac,
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name1',
+        pubkey: TEST_PUBKEY,
+        callback: 'http://example.com/callback',
+        mac,
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('invalid mac')
 }, 10000)
@@ -401,16 +486,20 @@ it('returns 400 for invalid mac (incorrect key pair)', async () => {
     .setProtectedHeader(keypairProtectedHeader)
     .sign(TEST_PRIVKEY)
 
-  const res = await apiServer.request('/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: 'name2',
-      pubkey: TEST_PUBKEY2,
-      callback: 'http://example.com/callback',
-      mac,
-    }),
-  })
+  const res = await apiServer.request(
+    '/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'name2',
+        pubkey: TEST_PUBKEY2,
+        callback: 'http://example.com/callback',
+        mac,
+      }),
+    },
+    MOCK_ENV,
+  )
   expect(res.status).toBe(400)
   expect(await res.text()).toBe('invalid mac')
 })
