@@ -17,6 +17,7 @@ const MOCK_ENV = {
   GITHUB_OAUTH_SECRET: 'github_oauth_secret',
   GITHUB_APP_ID: 'github_app_id',
   GITHUB_APP_PRIVKEY: btoa('github_app_privkey'),
+  DB: {},
 }
 
 vi.spyOn(global, 'fetch').mockImplementation(async (path, options) => {
@@ -111,26 +112,30 @@ vi.mock('octokit', async () => {
 })
 
 it('returns 405 if method != GET', async () => {
-  const res1 = await apiServer.request('/cb', { method: 'POST' })
+  const res1 = await apiServer.request('/cb', { method: 'POST' }, MOCK_ENV)
   expect(res1.status).toBe(405)
 
   // HEAD は GET 時の header を返す method なので許容
-  // const res2 = await apiServer.request('/cb', { method: 'HEAD' })
+  // const res2 = await apiServer.request('/cb', { method: 'HEAD' }, MOCK_ENV)
   // expect(res2.status).toBe(405)
 
-  const res3 = await apiServer.request('/cb', { method: 'PUT' })
+  const res3 = await apiServer.request('/cb', { method: 'PUT' }, MOCK_ENV)
   expect(res3.status).toBe(405)
 
-  const res4 = await apiServer.request('/cb', { method: 'DELETE' })
+  const res4 = await apiServer.request('/cb', { method: 'DELETE' }, MOCK_ENV)
   expect(res4.status).toBe(405)
 
-  const res5 = await apiServer.request('/cb', { method: 'OPTIONS' })
+  const res5 = await apiServer.request('/cb', { method: 'OPTIONS' }, MOCK_ENV)
   expect(res5.status).toBe(405)
 
-  const res6 = await apiServer.request('/cb', { method: 'PATCH' })
+  const res6 = await apiServer.request('/cb', { method: 'PATCH' }, MOCK_ENV)
   expect(res6.status).toBe(405)
 
-  const res7 = await apiServer.request('/cb', { method: 'MYCUSTOMMETHOD' })
+  const res7 = await apiServer.request(
+    '/cb',
+    { method: 'MYCUSTOMMETHOD' },
+    MOCK_ENV,
+  )
   expect(res7.status).toBe(405)
 
   // connect and trace are not supported by Hono
@@ -140,7 +145,7 @@ it('returns 400 if missing code', async () => {
   const param = new URLSearchParams()
   param.set('state', 'state')
 
-  const res = await apiServer.request('/cb?' + param.toString())
+  const res = await apiServer.request('/cb?' + param.toString(), {}, MOCK_ENV)
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
@@ -149,7 +154,7 @@ it('returns 400 if missing state', async () => {
   const param = new URLSearchParams()
   param.set('code', 'code')
 
-  const res = await apiServer.request('/cb?' + param.toString())
+  const res = await apiServer.request('/cb?' + param.toString(), {}, MOCK_ENV)
   expect(res.status).toBe(400)
   expect(await res.text()).toContain('ZodError')
 })
