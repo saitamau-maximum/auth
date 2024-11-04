@@ -3,6 +3,8 @@ import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 import { HonoEnv } from 'load-context'
 
+import * as schema from '../app/schema'
+
 import cbRoute from './cb'
 import goRoute from './go'
 import tokenRoute from './token'
@@ -18,8 +20,8 @@ app.use(async (c, next) => {
 })
 
 app.use(async (c, next) => {
-  const client = drizzle(c.env.DB)
-  c.set('client', client)
+  const db_client = drizzle(c.env.DB, { schema })
+  c.set('db_client', db_client)
 
   await next()
 })
