@@ -5,6 +5,7 @@ import { html } from 'hono/html'
 import { validator } from 'hono/validator'
 import { HonoEnv } from 'load-context'
 import { generateAuthToken } from 'utils/auth-token.server'
+import { z } from 'zod'
 
 import {
   oauthClient,
@@ -19,16 +20,18 @@ const app = new Hono<HonoEnv>()
 
 app.get(
   '/',
-  // Zod だといい感じのエラーメッセージ書くのが面倒くさいので、手動で書いてる
   // TODO: Bad Request の画面をいい感じにするかも
+  // zValidator 使うと DB 二重でリクエストしそう 使い方が悪い？
   validator('query', async (query, c: Context<HonoEnv>) => {
-    // client_id が存在するかチェック
-    const clientId = query['client_id']
-    if (!clientId || Array.isArray(clientId)) {
+    // client_id がパラメータにあるか・複数存在しないか
+    const { data: clientId, success: success1 } = z
+      .string()
+      .safeParse(query['client_id'])
+    if (!success1) {
       return c.text('Bad Request: invalid client_id', 400)
     }
 
-    // client_id が DB にあるかチェック
+    // client_id が DB にあるか
     const client = (
       await c.var.dbClient
         .select()
@@ -38,18 +41,21 @@ app.get(
         .limit(1)
     ).at(0)
     // LIMIT 1 なので client.length は 0 or 1 で、条件に合致するものがなかったら [0] が undefined になる
-    if (!client) {
-      return c.text('Bad Request: client_id not registered', 400)
-    }
+    if (!client) return c.text('Bad Request: client_id not registered', 400)
 
     // redirect_uri が複数ないことをチェック
-    let redirectUri = query['redirect_uri']
-    if (Array.isArray(redirectUri) && redirectUri.length > 1) {
-      return c.text('Bad Request: too many redirect_uri', 400)
+    // eslint-disable-next-line prefer-const
+    let { data: redirectUri, success: success2 } = z
+      .string()
+      .url()
+      .optional()
+      .safeParse(query['redirect_uri'])
+    if (!success2) {
+      return c.text('Bad Request: invalid redirect_uri', 400)
     }
 
     // redirect_uri がパラメータとして与えられていない場合
-    if (!redirectUri || Array.isArray(redirectUri)) {
+    if (!redirectUri) {
       const registeredUris =
         await c.var.dbClient.query.oauthClientCallback.findMany({
           where: (oauthClientCallback, { eq }) =>
@@ -66,10 +72,6 @@ app.get(
       // DB 内に登録されているものを callback として扱う
       redirectUri = registeredUris[0].callback_url
     } else {
-      if (!URL.canParse(redirectUri)) {
-        return c.text('Bad Request: invalid redirect_uri', 400)
-      }
-
       // Redirect URI のクエリパラメータ部分は変わることを許容する
       const normalizedUri = new URL(redirectUri)
       normalizedUri.search = ''
@@ -88,12 +90,12 @@ app.get(
       }
     }
 
-    let state = query['state']
-    if (!state || Array.isArray(state)) {
-      if (Array.isArray(state) && state.length > 1) {
-        return c.text('Bad Request: too many state')
-      }
-      state = ''
+    const { data: state, success: success3 } = z
+      .string()
+      .optional()
+      .safeParse(query['state'])
+    if (!success3) {
+      return c.text('Bad Request: too many state')
     }
 
     // ---------- 以下エラー時リダイレクトさせるやつ ---------- //
@@ -113,8 +115,10 @@ app.get(
       return c.redirect(callback.toString(), 302)
     }
 
-    const responseType = query['response_type']
-    if (!responseType || Array.isArray(responseType)) {
+    const { data: responseType, success: success4 } = z
+      .string()
+      .safeParse(query['response_type'])
+    if (!success4) {
       return errorRedirect('invalid_request', 'response_type required', '')
     }
     if (responseType !== 'code') {
@@ -125,7 +129,17 @@ app.get(
       )
     }
 
-    let scope = query['scope']
+    const { data: scope, success: success5 } = z
+      .string()
+      .regex(
+        /^[\x21|\x23-\x5B|\x5D-\x7E]+(?:\x20+[\x21|\x23-\x5B|\x5D-\x7E]+)*$/,
+      )
+      .optional()
+      .safeParse(query['scope'])
+    if (!success5) {
+      return errorRedirect('invalid_scope', 'invalid scope', '')
+    }
+
     let dbScopes: {
       oauth_scope: {
         id: number
@@ -138,24 +152,13 @@ app.get(
       }
     }[]
 
-    if (!scope || Array.isArray(scope)) {
-      // TODO: error_uri に Hint: scope must be separated with space みたいなことを書いてあげるといいのかな
-      if (Array.isArray(scope) && scope.length > 1) {
-        return errorRedirect('invalid_request', 'too many scope parameter', '')
-      }
-      scope = ''
+    if (!scope) {
       dbScopes = await c.var.dbClient
         .select()
         .from(oauthClientScope)
         .leftJoin(oauthScope, eq(oauthClientScope.scope_id, oauthScope.id))
         .where(eq(oauthClientScope.client_id, clientId))
     } else {
-      const scopeRegex =
-        /^[\x21|\x23-\x5B|\x5D-\x7E]+(?:\x20+[\x21|\x23-\x5B|\x5D-\x7E]+)*$/
-      if (!scopeRegex.test(scope)) {
-        return errorRedirect('invalid_scope', 'invalid scope format', '')
-      }
-
       const scopes = scope.split(' ')
       const uniqueScopes = [...new Set(scope.split(' '))]
       if (scopes.length !== uniqueScopes.length) {
@@ -197,7 +200,14 @@ app.get(
       )
     }
 
-    return { clientId, redirectUri, state, scope, dbScopes, clientInfo: client }
+    return {
+      clientId,
+      redirectUri,
+      state: state || '',
+      scope: scope || '',
+      dbScopes,
+      clientInfo: client,
+    }
   }),
   async (c, next) => {
     // TODO: ログインしているかチェック
