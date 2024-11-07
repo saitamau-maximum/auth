@@ -61,6 +61,10 @@ app.get(
       // DB 内に登録されているものを callback として扱う
       redirectUri = registeredUris[0].callback_url
     } else {
+      if (!URL.canParse(redirectUri)) {
+        return c.text('Bad Request: invalid redirect_uri', 400)
+      }
+
       // Redirect URI のクエリパラメータ部分は変わることを許容する
       const normalizedUri = new URL(redirectUri)
       normalizedUri.search = ''
@@ -144,11 +148,7 @@ app.get(
       const scopeRegex =
         /^[\x21|\x23-\x5B|\x5D-\x7E]+(?:\x20+[\x21|\x23-\x5B|\x5D-\x7E]+)*$/
       if (!scopeRegex.test(scope)) {
-        return errorRedirect(
-          'invalid_scope',
-          'scope must be space-separated visible ASCII characters',
-          '',
-        )
+        return errorRedirect('invalid_scope', 'invalid scope format', '')
       }
 
       const scopes = scope.split(' ')
@@ -184,10 +184,19 @@ app.get(
       }
     }
 
+    if (dbScopes.length === 0) {
+      return errorRedirect(
+        'invalid_scope',
+        'there must be at least one scope specified',
+        '',
+      )
+    }
+
     return { clientId, redirectUri, state, scope, dbScopes, clientInfo: client }
   }),
-  async _c => {
+  async (c, next) => {
     // TODO: ログインしているかチェック
+    return next()
   },
   async c => {
     const { clientId, redirectUri, state, scope, dbScopes, clientInfo } =
@@ -217,12 +226,15 @@ app.get(
           <h1>${clientInfo.oauth_client.name} を承認しますか？</h1>
           <div>
             承認すると、 ${clientInfo.user?.displayName} による
-            ${clientInfo.oauth_client.name} はあなたのアカウント (ここに ID
-            を入れる) の以下の情報にアクセスできるようになります。
+            ${clientInfo.oauth_client.name} はあなたのアカウント
+            (ここにログインユーザーの情報を入れる)
+            の以下の情報にアクセスできるようになります。
             <ul>
               ${dbScopes.map(
                 data =>
-                  `<li>${data.oauth_scope?.name}: ${data.oauth_scope?.description}</li>`,
+                  html`<li>
+                    ${data.oauth_scope?.name}: ${data.oauth_scope?.description}
+                  </li>`,
               )}
             </ul>
           </div>
@@ -235,6 +247,8 @@ app.get(
             <input type="hidden" name="auth_token" value="${token}" />
             <button type="submit" name="authorized" value="1">承認する</button>
             <button type="submit" name="authorized" value="0">拒否する</button>
+            ${new URL(redirectUri).origin} にリダイレクトします。
+            このアドレスが意図しているものか確認してください。
           </form>
         </body>
       </html> `

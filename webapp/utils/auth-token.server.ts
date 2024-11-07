@@ -30,17 +30,18 @@ const alg = {
   hash: 'SHA-512',
 }
 
-export const generateAuthToken = (param: GenerateParam) => {
+export const generateAuthToken = async (param: GenerateParam) => {
   const { key, ...rest } = param
-  return crypto.subtle.sign(alg, key, content(rest))
+  const signedBuf = await crypto.subtle.sign(alg, key, content(rest))
+  return btoa(Array.from(new Uint8Array(signedBuf)).join(','))
 }
 
 export const validateAuthToken = (param: ValidateParam) => {
   const { key, hash, ...rest } = param
-  return crypto.subtle.verify(
-    alg,
-    key,
-    new TextEncoder().encode(hash),
-    content(rest),
+  const signBuf = new Uint8Array(
+    atob(hash)
+      .split(',')
+      .map(byte => parseInt(byte, 10)),
   )
+  return crypto.subtle.verify(alg, key, signBuf, content(rest))
 }
