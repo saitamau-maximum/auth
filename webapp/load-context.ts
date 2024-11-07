@@ -18,7 +18,7 @@ export interface Env {
 export interface HonoEnv {
   Bindings: Env
   Variables: {
-    db_client: DrizzleD1Database<typeof schema>
+    dbClient: DrizzleD1Database<typeof schema>
   }
 }
 

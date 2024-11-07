@@ -21,8 +21,8 @@ app.use(async (c, next) => {
 })
 
 app.use(async (c, next) => {
-  const db_client = drizzle(c.env.DB, { schema })
-  c.set('db_client', db_client)
+  const dbClient = drizzle(c.env.DB, { schema })
+  c.set('dbClient', dbClient)
 
   await next()
 })

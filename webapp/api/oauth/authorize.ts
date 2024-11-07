@@ -30,13 +30,13 @@ app.get(
 
     // client_id が DB にあるかチェック
     const client = (
-      await c.var.db_client
+      await c.var.dbClient
         .select()
         .from(oauthClient)
         .leftJoin(user, eq(oauthClient.owner_id, user.id))
         .where(eq(oauthClient.id, clientId))
         .limit(1)
-    )[0]
+    ).at(0)
     // LIMIT 1 なので client.length は 0 or 1 で、条件に合致するものがなかったら [0] が undefined になる
     if (!client) {
       return c.text('Bad Request: client_id not registered', 400)
@@ -51,7 +51,7 @@ app.get(
     // redirect_uri がパラメータとして与えられていない場合
     if (!redirectUri || Array.isArray(redirectUri)) {
       const registeredUris =
-        await c.var.db_client.query.oauthClientCallback.findMany({
+        await c.var.dbClient.query.oauthClientCallback.findMany({
           where: (oauthClientCallback, { eq }) =>
             eq(oauthClientCallback.client_id, clientId),
         })
@@ -75,7 +75,7 @@ app.get(
       normalizedUri.search = ''
 
       const registeredUri =
-        await c.var.db_client.query.oauthClientCallback.findFirst({
+        await c.var.dbClient.query.oauthClientCallback.findFirst({
           where: (oauthClientCallback, { eq, and }) =>
             and(
               eq(oauthClientCallback.client_id, clientId),
@@ -144,7 +144,7 @@ app.get(
         return errorRedirect('invalid_request', 'too many scope parameter', '')
       }
       scope = ''
-      dbScopes = await c.var.db_client
+      dbScopes = await c.var.dbClient
         .select()
         .from(oauthClientScope)
         .leftJoin(oauthScope, eq(oauthClientScope.scope_id, oauthScope.id))
@@ -166,7 +166,7 @@ app.get(
         )
       }
 
-      dbScopes = await c.var.db_client
+      dbScopes = await c.var.dbClient
         .select()
         .from(oauthClientScope)
         .leftJoin(oauthScope, eq(oauthClientScope.scope_id, oauthScope.id))
