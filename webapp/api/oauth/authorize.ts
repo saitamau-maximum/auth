@@ -95,7 +95,7 @@ app.get(
       .optional()
       .safeParse(query['state'])
     if (!success3) {
-      return c.text('Bad Request: too many state')
+      return c.text('Bad Request: too many state', 400)
     }
 
     // ---------- 以下エラー時リダイレクトさせるやつ ---------- //
