@@ -1,3 +1,6 @@
+// auth token を生成するための util
+// https://github.com/saitamau-maximum/auth/issues/27
+
 interface Param {
   clientId: string
   redirectUri: string
@@ -25,14 +28,14 @@ const content = (param: Param) => {
   return new TextEncoder().encode(p.toString())
 }
 
-const alg = {
+const ALG = {
   name: 'ECDSA',
   hash: 'SHA-512',
 }
 
 export const generateAuthToken = async (param: GenerateParam) => {
   const { key, ...rest } = param
-  const signedBuf = await crypto.subtle.sign(alg, key, content(rest))
+  const signedBuf = await crypto.subtle.sign(ALG, key, content(rest))
   return btoa(Array.from(new Uint8Array(signedBuf)).join(','))
 }
 
@@ -43,5 +46,5 @@ export const validateAuthToken = (param: ValidateParam) => {
       .split(',')
       .map(byte => parseInt(byte, 10)),
   )
-  return crypto.subtle.verify(alg, key, signBuf, content(rest))
+  return crypto.subtle.verify(ALG, key, signBuf, content(rest))
 }
