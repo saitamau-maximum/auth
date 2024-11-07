@@ -6,7 +6,12 @@ import { validator } from 'hono/validator'
 import { HonoEnv } from 'load-context'
 import { generateAuthToken } from 'utils/auth-token.server'
 
-import { oauthClient, oauthClientScope, oauthScope, user } from '~/schema'
+import {
+  oauthClient,
+  oauthClientScope,
+  oauthScope,
+  user,
+} from '../../app/schema'
 
 const app = new Hono<HonoEnv>()
 
