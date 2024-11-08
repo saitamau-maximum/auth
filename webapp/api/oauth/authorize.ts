@@ -16,6 +16,18 @@ import {
 
 const app = new Hono<HonoEnv>()
 
+interface IDbScope {
+  oauth_scope: {
+    id: number
+    name: string
+    description: string | null
+  } | null
+  oauth_client_scope: {
+    client_id: string
+    scope_id: number
+  }
+}
+
 // 仕様はここ参照: https://github.com/saitamau-maximum/auth/issues/27
 
 app.get(
@@ -140,17 +152,7 @@ app.get(
       return errorRedirect('invalid_scope', 'invalid scope', '')
     }
 
-    let dbScopes: {
-      oauth_scope: {
-        id: number
-        name: string
-        description: string | null
-      } | null
-      oauth_client_scope: {
-        client_id: string
-        scope_id: number
-      }
-    }[]
+    let dbScopes: IDbScope[]
 
     if (!scope) {
       dbScopes = await c.var.dbClient
