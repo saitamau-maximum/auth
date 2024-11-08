@@ -1,5 +1,5 @@
 /* eslint-disable sort-exports/sort-exports */
-import { sql } from 'drizzle-orm'
+import { sql, relations } from 'drizzle-orm'
 import {
   check,
   int,
@@ -167,5 +167,111 @@ export const oauthTokenScope = sqliteTable(
   },
   table => ({
     pk: primaryKey({ columns: [table.token_id, table.scope_id] }),
+  }),
+)
+
+// ---------- Relations ---------- //
+
+export const userRelations = relations(user, ({ many }) => ({
+  roles: many(role),
+  oauthConnections: many(oauthConnection),
+}))
+
+export const roleRelations = relations(role, ({ many }) => ({
+  users: many(user),
+}))
+
+export const userRoleRelations = relations(userRole, ({ one }) => ({
+  user: one(user, { fields: [userRole.userId], references: [user.id] }),
+  role: one(role, { fields: [userRole.roleId], references: [role.id] }),
+}))
+
+export const oauthProviderRelations = relations(oauthProvider, ({ many }) => ({
+  connections: many(oauthConnection),
+}))
+
+export const oauthConnectionRelations = relations(
+  oauthConnection,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [oauthConnection.userId],
+      references: [user.id],
+    }),
+    provider: one(oauthProvider, {
+      fields: [oauthConnection.providerId],
+      references: [oauthProvider.id],
+    }),
+  }),
+)
+
+export const oauthClientRelations = relations(oauthClient, ({ one, many }) => ({
+  owner: one(user, { fields: [oauthClient.owner_id], references: [user.id] }),
+  secrets: many(oauthClientSecret),
+  callbacks: many(oauthClientCallback),
+  scopes: many(oauthClientScope),
+}))
+
+export const oauthClientSecretRelations = relations(
+  oauthClientSecret,
+  ({ one }) => ({
+    client: one(oauthClient, {
+      fields: [oauthClientSecret.client_id],
+      references: [oauthClient.id],
+    }),
+    issuer: one(user, {
+      fields: [oauthClientSecret.issued_by],
+      references: [user.id],
+    }),
+  }),
+)
+
+export const oauthClientCallbackRelations = relations(
+  oauthClientCallback,
+  ({ one }) => ({
+    client: one(oauthClient, {
+      fields: [oauthClientCallback.client_id],
+      references: [oauthClient.id],
+    }),
+  }),
+)
+
+export const oauthScopeRelations = relations(oauthScope, ({ many }) => ({
+  clients: many(oauthClientScope),
+  tokens: many(oauthTokenScope),
+}))
+
+export const oauthClientScopeRelations = relations(
+  oauthClientScope,
+  ({ one }) => ({
+    client: one(oauthClient, {
+      fields: [oauthClientScope.client_id],
+      references: [oauthClient.id],
+    }),
+    scope: one(oauthScope, {
+      fields: [oauthClientScope.scope_id],
+      references: [oauthScope.id],
+    }),
+  }),
+)
+
+export const oauthTokenRelations = relations(oauthToken, ({ one }) => ({
+  client: one(oauthClient, {
+    fields: [oauthToken.client_id],
+    references: [oauthClient.id],
+  }),
+  user: one(user, { fields: [oauthToken.user_id], references: [user.id] }),
+}))
+
+export const oauthTokenScopeRelations = relations(
+  oauthTokenScope,
+  ({ one }) => ({
+    token: one(oauthToken, {
+      fields: [oauthTokenScope.token_id],
+      references: [oauthToken.id],
+    }),
+    scope: one(oauthScope, {
+      fields: [oauthTokenScope.scope_id],
+      references: [oauthScope.id],
+    }),
   }),
 )
