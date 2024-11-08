@@ -1,6 +1,8 @@
 import { DrizzleD1Database } from 'drizzle-orm/d1'
 import { type PlatformProxy } from 'wrangler'
 
+import * as schema from './app/schema'
+
 export interface Env {
   GITHUB_APP_ID: string
   GITHUB_APP_PRIVKEY: string
@@ -16,7 +18,7 @@ export interface Env {
 export interface HonoEnv {
   Bindings: Env
   Variables: {
-    client: DrizzleD1Database
+    dbClient: DrizzleD1Database<typeof schema>
   }
 }
 
