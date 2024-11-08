@@ -23,7 +23,10 @@
     "generate:migrations": "drizzle-kit generate",
     "apply:migrations:local": "wrangler d1 migrations apply --local maximum-idp-db-for-preview",
     "apply:migrations:preview": "wrangler d1 migrations apply --remote maximum-idp-db-for-preview",
-    "apply:migrations:prod": "wrangler d1 migrations apply --env production --remote maximum-idp-db"
+    "apply:migrations:prod": "wrangler d1 migrations apply --env production --remote maximum-idp-db",
+    "apply:seed:local": "wrangler d1 execute --file ./db/seed.sql --local maximum-idp-db-for-preview",
+    "apply:seed:preview": "wrangler d1 execute --file ./db/seed.sql --remote maximum-idp-db-for-preview",
+    "apply:seed:prod": "wrangler d1 execute --file ./db/seed.sql --env production --remote maximum-idp-db"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.1",
