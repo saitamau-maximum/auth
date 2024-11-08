@@ -3,7 +3,7 @@ import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 import { HonoEnv } from 'load-context'
 
-import * as schema from '../app/schema'
+import * as schema from '../db/schema'
 
 import cbRoute from './cb'
 import goRoute from './go'
