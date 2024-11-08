@@ -8,6 +8,7 @@ import * as schema from '../app/schema'
 import cbRoute from './cb'
 import goRoute from './go'
 import oauthAuthorizeRoute from './oauth/authorize'
+import oauthCallbackRoute from './oauth/callback'
 import tokenRoute from './token'
 
 const app = new Hono<HonoEnv>()
@@ -31,5 +32,6 @@ app.route('/token', tokenRoute)
 app.route('/go', goRoute)
 app.route('/cb', cbRoute)
 app.route('/oauth/authorize', oauthAuthorizeRoute)
+app.route('/oauth/callback', oauthCallbackRoute)
 
 export default app
