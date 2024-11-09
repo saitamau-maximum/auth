@@ -7,6 +7,7 @@ export interface SessionData {
   profile_image: string
   teams: string[]
   is_member: boolean
+  user_id: string
 }
 
 export interface SessionFlashData {

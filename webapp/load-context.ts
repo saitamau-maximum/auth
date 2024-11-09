@@ -1,7 +1,7 @@
 import { DrizzleD1Database } from 'drizzle-orm/d1'
 import { type PlatformProxy } from 'wrangler'
 
-import * as schema from './app/schema'
+import * as schema from './db/schema'
 
 export interface Env {
   GITHUB_APP_ID: string
