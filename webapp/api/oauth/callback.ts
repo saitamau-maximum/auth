@@ -1,8 +1,10 @@
 import { zValidator } from '@hono/zod-validator'
 import { derivePublicKey, importKey } from '@saitamau-maximum/auth/internal'
+import { oauthToken, oauthTokenScope } from 'db/schema'
 import { Hono } from 'hono'
 import { HonoEnv } from 'load-context'
 import { validateAuthToken } from 'utils/auth-token.server'
+import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
 
 const app = new Hono<HonoEnv>()
@@ -32,10 +34,6 @@ app.post(
       if (!res.success) return c.text('Bad Request: invalid parameters', 400)
     },
   ),
-  async (c, next) => {
-    // TODO: ログインしているかチェック
-    return next()
-  },
   async c => {
     const {
       auth_token,
@@ -49,6 +47,9 @@ app.post(
     const time = parseInt(_time, 10)
     const nowUnixMs = Date.now()
 
+    c.header('Cache-Control', 'no-store')
+    c.header('Pragma', 'no-cache')
+
     const publicKey = await derivePublicKey(
       await importKey(c.env.PRIVKEY, 'privateKey'),
     )
@@ -61,12 +62,26 @@ app.post(
       key: publicKey,
       hash: auth_token,
     })
-
-    c.header('Cache-Control', 'no-store')
-    c.header('Pragma', 'no-cache')
-
+    // auth_token が妥当 = client_id,redirect_uri,time,scope,state がリクエスト時と一致
     if (!isValidToken) {
       return c.text('Bad Request: invalid auth_token', 400)
+    }
+
+    // ログインしてるか
+    const { getSession } = cookieSessionStorage(c.env)
+    const session = await getSession(c.req.raw.headers.get('Cookie'))
+    const userId = session.get('user_id')
+    if (!userId) {
+      // ログインしてない場合は何かがおかしい
+      return c.text('Bad Request: not logged in', 400)
+    }
+    const userInfo = await c.var.dbClient.query.user.findFirst({
+      where: (user, { eq }) => eq(user.id, userId),
+    })
+    if (!userInfo) {
+      // 存在しないユーザー
+      // これも何かがおかしい
+      return c.text('Bad Request: invalid user', 400)
     }
 
     // タイムリミットは 5 min
@@ -86,9 +101,85 @@ app.post(
       // redirectTo.searchParams.append('error_uri', '') // そのうち書きたいね
       return c.redirect(redirectTo.href, 302)
     }
-    // todo
-    // return c.redirect(redirectTo.href, 302)
-    return c.text('ok')
+
+    // scope 取得
+    const requestedScopes = new Set(scope ? scope.split(' ') : [])
+    const scopes = (
+      await c.var.dbClient.query.oauthClient.findMany({
+        where: (oauthClient, { eq }) => eq(oauthClient.id, client_id),
+        with: {
+          scopes: {
+            with: {
+              scope: true,
+            },
+          },
+        },
+      })
+    )
+      .map(client => client.scopes.map(scope => scope.scope))
+      .flat()
+      .filter(data => {
+        // scope リクエストしてない場合は requestedScopes = [] なので、全部 true として付与
+        if (requestedScopes.size === 0) return true
+        // そうでない場合はリクエストされた scope だけを付与
+        return requestedScopes.has(data.name)
+      })
+
+    // code (240bit = 8bit * 30) を生成
+    const code = btoa(
+      String.fromCharCode(...crypto.getRandomValues(new Uint8Array(30))),
+    )
+
+    // access token (312bit = 8bit * 39) を生成
+    const accessToken = btoa(
+      String.fromCharCode(...crypto.getRandomValues(new Uint8Array(39))),
+    )
+
+    // DB に格納
+    // transaction が使えないが、 batch だと autoincrement な token id を取得できないので、 Cloudflare の力を信じてふつうに insert する
+    const tokenInsertRes = await c.var.dbClient
+      .insert(oauthToken)
+      .values({
+        client_id,
+        user_id: userId,
+        code,
+        code_expires_at: new Date(nowUnixMs + 1 * 60 * 1000), // 1 min
+        code_used: false,
+        redirect_uri,
+        access_token: accessToken,
+        access_token_expires_at: new Date(nowUnixMs + 1 * 60 * 60 * 1000), // 1 hour
+      })
+      .returning()
+    if (tokenInsertRes.length === 0) {
+      redirectTo.searchParams.append('error', 'server_error')
+      redirectTo.searchParams.append(
+        'error_description',
+        'Failed to insert token',
+      )
+      // redirectTo.searchParams.append('error_uri', '') // そのうち書きたいね
+      return c.redirect(redirectTo.href, 302)
+    }
+    const tokenScopeInsertRes = await c.var.dbClient
+      .insert(oauthTokenScope)
+      .values(
+        scopes.map(scope => ({
+          token_id: tokenInsertRes[0].id,
+          scope_id: scope.id,
+        })),
+      )
+    if (!tokenScopeInsertRes.success) {
+      redirectTo.searchParams.append('error', 'server_error')
+      redirectTo.searchParams.append(
+        'error_description',
+        'Failed to insert token scope',
+      )
+      // redirectTo.searchParams.append('error_uri', '') // そのうち書きたいね
+      return c.redirect(redirectTo.href, 302)
+    }
+
+    redirectTo.searchParams.append('code', code)
+
+    return c.redirect(redirectTo.href, 302)
   },
 )
 
