@@ -162,8 +162,8 @@ app.get(
     return {
       clientId,
       redirectUri,
-      state: state || '',
-      scope: scope || '',
+      state,
+      scope,
       clientInfo: client,
     }
   }),
@@ -231,8 +231,8 @@ app.get(
           <form method="POST" action="/oauth/callback">
             <input type="hidden" name="client_id" value="${clientId}" />
             <input type="hidden" name="redirect_uri" value="${redirectUri}" />
-            <input type="hidden" name="state" value="${state}" />
-            <input type="hidden" name="scope" value="${scope}" />
+            <input type="hidden" name="state" value="${state || ''}" />
+            <input type="hidden" name="scope" value="${scope || ''}" />
             <input type="hidden" name="time" value="${nowUnixMs}" />
             <input type="hidden" name="auth_token" value="${token}" />
             <button type="submit" name="authorized" value="1">承認する</button>

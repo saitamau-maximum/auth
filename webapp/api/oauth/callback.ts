@@ -56,8 +56,8 @@ app.post(
     const isValidToken = await validateAuthToken({
       clientId: client_id,
       redirectUri: redirect_uri,
-      scope: scope || '',
-      state: state || '',
+      scope,
+      state,
       time,
       key: publicKey,
       hash: auth_token,
