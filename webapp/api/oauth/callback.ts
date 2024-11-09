@@ -85,7 +85,7 @@ app.post(
     }
 
     // タイムリミットは 5 min
-    if (time + 5 * 60 * 1000 > nowUnixMs) {
+    if (time + 5 * 60 * 1000 < nowUnixMs) {
       // TODO: 5 min 以内に承認してくださいみたいなメッセージ追加すべき？
       return c.text('Bad Request: authorization request expired', 400)
     }
