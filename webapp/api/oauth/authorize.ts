@@ -1,11 +1,13 @@
 import { importKey } from '@saitamau-maximum/auth/internal'
+import { _Layout } from 'api/_templates/layout'
 import { Context, Hono } from 'hono'
-import { html } from 'hono/html'
 import { validator } from 'hono/validator'
 import { HonoEnv } from 'load-context'
 import { generateAuthToken } from 'utils/auth-token.server'
 import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
+
+import { _Authorize } from './_templates/authorize'
 
 const app = new Hono<HonoEnv>()
 
@@ -208,40 +210,25 @@ app.get(
       )
     }
 
-    // TODO: デザインちゃんとする
-    // とりあえず GitHub OAuth のイメージで書いてる
-    const responseHtml = html`<!doctype html>
-      <html lang="ja">
-        <head>
-          <title>Authorize ${clientInfo.name} | Maximum Auth</title>
-        </head>
-        <body>
-          <h1>${clientInfo.name} を承認しますか？</h1>
-          <div>
-            承認すると、 ${clientInfo.owner.displayName} による
-            ${clientInfo.name} はあなたのアカウント (${userInfo.displayName})
-            の以下の情報にアクセスできるようになります。
-            <ul>
-              ${clientInfo.scopes.map(
-                data =>
-                  html`<li>${data.scope.name}: ${data.scope.description}</li>`,
-              )}
-            </ul>
-          </div>
-          <form method="POST" action="/oauth/callback">
-            <input type="hidden" name="client_id" value="${clientId}" />
-            <input type="hidden" name="redirect_uri" value="${redirectUri}" />
-            <input type="hidden" name="state" value="${state || ''}" />
-            <input type="hidden" name="scope" value="${scope || ''}" />
-            <input type="hidden" name="time" value="${nowUnixMs}" />
-            <input type="hidden" name="auth_token" value="${token}" />
-            <button type="submit" name="authorized" value="1">承認する</button>
-            <button type="submit" name="authorized" value="0">拒否する</button>
-            ${new URL(redirectUri).origin} にリダイレクトします。
-            このアドレスが意図しているものか確認してください。
-          </form>
-        </body>
-      </html> `
+    const responseHtml = _Layout({
+      children: _Authorize({
+        appName: clientInfo.name,
+        appOwnerName: clientInfo.owner.displayName,
+        scopes: clientInfo.scopes.map(data => ({
+          name: data.scope.name,
+          description: data.scope.description,
+        })),
+        oauthFields: {
+          clientId,
+          redirectUri,
+          state,
+          scope,
+          token,
+          nowUnixMs,
+        },
+      }),
+      subtitle: clientInfo.name,
+    })
 
     c.header('Cache-Control', 'no-store')
     c.header('Pragma', 'no-cache')
