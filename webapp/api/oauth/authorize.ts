@@ -4,6 +4,7 @@ import { html } from 'hono/html'
 import { validator } from 'hono/validator'
 import { HonoEnv } from 'load-context'
 import { generateAuthToken } from 'utils/auth-token.server'
+import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
 
 const app = new Hono<HonoEnv>()
@@ -166,10 +167,6 @@ app.get(
       clientInfo: client,
     }
   }),
-  async (c, next) => {
-    // TODO: ログインしているかチェック
-    return next()
-  },
   async c => {
     const { clientId, redirectUri, state, scope, clientInfo } =
       c.req.valid('query')
@@ -185,6 +182,32 @@ app.get(
       key: privateKey,
     })
 
+    // ログインしてるか
+    const { getSession } = cookieSessionStorage(c.env)
+    const session = await getSession(c.req.raw.headers.get('Cookie'))
+    const userId = session.get('user_id')
+    const thisUrl = new URL(c.req.url)
+    const afterLoginUrl = thisUrl.pathname + thisUrl.search
+    if (!userId) {
+      // ログインしてない場合はログイン画面に飛ばす
+      return c.redirect(
+        `/login?continue_to=${encodeURIComponent(afterLoginUrl)}`,
+        302,
+      )
+    }
+    const userInfo = await c.var.dbClient.query.user.findFirst({
+      where: (user, { eq }) => eq(user.id, userId),
+    })
+    if (!userInfo) {
+      // 存在しないユーザー
+      // そんなわけないのでログインしなおし
+      // TODO: login ページでは user_id を消すようにする
+      return c.redirect(
+        `/login?continue_to=${encodeURIComponent(afterLoginUrl)}`,
+        302,
+      )
+    }
+
     // TODO: デザインちゃんとする
     // とりあえず GitHub OAuth のイメージで書いてる
     const responseHtml = html`<!doctype html>
@@ -196,8 +219,7 @@ app.get(
           <h1>${clientInfo.name} を承認しますか？</h1>
           <div>
             承認すると、 ${clientInfo.owner.displayName} による
-            ${clientInfo.name} はあなたのアカウント
-            (ここにログインユーザーの情報を入れる)
+            ${clientInfo.name} はあなたのアカウント (${userInfo.displayName})
             の以下の情報にアクセスできるようになります。
             <ul>
               ${clientInfo.scopes.map(
