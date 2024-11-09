@@ -22,8 +22,8 @@ const content = (param: Param) => {
   const p = new URLSearchParams()
   p.append('client_id', param.clientId)
   p.append('redirect_uri', param.redirectUri)
-  p.append('state', param.state || '')
-  p.append('scope', param.scope || '')
+  if (param.state) p.append('state', param.state)
+  if (param.scope) p.append('scope', param.scope)
   p.append('time', param.time.toString())
   return new TextEncoder().encode(p.toString())
 }
