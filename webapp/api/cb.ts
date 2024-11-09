@@ -6,6 +6,11 @@ import { Octokit } from 'octokit'
 import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
 
+import {
+  user as dbUser,
+  oauthConnection as dbOauthConnection,
+} from '../db/schema'
+
 const app = new Hono<HonoEnv>()
 
 interface GitHubOAuthTokenResponse {
@@ -116,6 +121,44 @@ app.get(
           .filter(team => team[1].some(member => member.id === user.id))
           .map(team => team[0]),
       )
+    }
+
+    // すでになければ DB にユーザー情報を格納
+    const oauthConnInfo = await c.var.dbClient.query.oauthConnection.findFirst({
+      // providerId = 1: GitHub
+      where: (oauthConnection, { eq, and }) =>
+        and(
+          eq(oauthConnection.providerId, 1),
+          eq(oauthConnection.providerUserId, String(user.id)),
+        ),
+    })
+    if (!oauthConnInfo) {
+      const uuid = crypto.randomUUID().replaceAll('-', '')
+      // Cloudflare D1 での transaction はサポートされてないっぽいので Batch する
+      // (ググるといろいろ出てくる)
+      await c.var.dbClient.batch([
+        // とりあえず仮情報で埋める
+        c.var.dbClient
+          .insert(dbUser)
+          .values({
+            id: uuid,
+            displayName: user.login,
+            profileImageUrl: user.avatar_url,
+          }),
+        c.var.dbClient
+          .insert(dbOauthConnection)
+          .values({
+            userId: uuid,
+            providerId: 1,
+            providerUserId: String(user.id),
+            email: user.email,
+            name: user.login,
+            profileImageUrl: user.avatar_url,
+          }),
+      ])
+      session.set('user_id', uuid)
+    } else {
+      session.set('user_id', oauthConnInfo.userId)
     }
 
     c.header('Set-Cookie', await commitSession(session))
