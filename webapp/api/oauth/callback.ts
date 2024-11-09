@@ -105,19 +105,15 @@ app.post(
     // scope 取得
     const requestedScopes = new Set(scope ? scope.split(' ') : [])
     const scopes = (
-      await c.var.dbClient.query.oauthClient.findMany({
-        where: (oauthClient, { eq }) => eq(oauthClient.id, client_id),
+      await c.var.dbClient.query.oauthClientScope.findMany({
+        where: (oauthClientScope, { eq }) =>
+          eq(oauthClientScope.client_id, client_id),
         with: {
-          scopes: {
-            with: {
-              scope: true,
-            },
-          },
+          scope: true,
         },
       })
     )
-      .map(client => client.scopes.map(scope => scope.scope))
-      .flat()
+      .map(clientScope => clientScope.scope)
       .filter(data => {
         // scope リクエストしてない場合は requestedScopes = [] なので、全部 true として付与
         if (requestedScopes.size === 0) return true
