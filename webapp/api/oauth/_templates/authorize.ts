@@ -4,6 +4,7 @@ import { html } from 'hono/html'
 interface AuthorizeProps {
   appName: string
   appOwnerName: string
+  appLogo: string | null
   scopes: { name: string; description: string | null }[]
   oauthFields: {
     clientId: string
@@ -15,15 +16,29 @@ interface AuthorizeProps {
   }
 }
 
+const APP_ICON_SIZE = 64
+
 export const _Authorize = ({
   appName,
   appOwnerName,
+  appLogo,
   scopes,
   oauthFields,
 }: AuthorizeProps) => html`
   <div class="max-w-md space-y-8">
     <div>
-      <h1 class="text-3xl font-bold mb-2 text-center">${appName}</h1>
+      <div class="flex items-center gap-4 w-fit mb-2 mx-auto">
+        ${appLogo
+          ? html`<img
+              src="${appLogo}"
+              alt="${appName} のロゴ"
+              width="${APP_ICON_SIZE}"
+              height="${APP_ICON_SIZE}"
+              class="rounded-full object-cover border-[1px] border-gray-200"
+            />`
+          : ''}
+        <h1 class="text-3xl font-bold text-center">${appName}</h1>
+      </div>
       <span class="block text-lg font-normal text-gray-600 text-center">
         を承認しますか？
       </span>
