@@ -75,9 +75,7 @@ app.post(
       // ログインしてない場合は何かがおかしい
       return c.text('Bad Request: not logged in', 400)
     }
-    const userInfo = await c.var.dbClient.query.user.findFirst({
-      where: (user, { eq }) => eq(user.id, userId),
-    })
+    const userInfo = await c.var.idpClient.findUserById(userId)
     if (!userInfo) {
       // 存在しないユーザー
       // これも何かがおかしい

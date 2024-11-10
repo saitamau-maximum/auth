@@ -1,88 +1,13 @@
 /* eslint-disable sort-exports/sort-exports */
-import { sql, relations } from 'drizzle-orm'
-import {
-  check,
-  int,
-  primaryKey,
-  sqliteTable,
-  text,
-} from 'drizzle-orm/sqlite-core'
-
-// ---------- IdP 関連 ---------- //
-
-export const user = sqliteTable('user', {
-  id: text('id').primaryKey(), // UUID で生成することを想定(人に対する連番 ID 嫌いなので)
-  displayName: text('display_name').notNull(),
-  profileImageUrl: text('profile_image_url'),
-  // その他の個人情報等は後で追加
-})
-
-export const role = sqliteTable(
-  'role',
-  {
-    id: int('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-    name: text('name').notNull(),
-    description: text('description'),
-    priority: int('priority', { mode: 'number' }).notNull(),
-  },
-  table => ({
-    checkConstraint: check('nonneg_priority', sql`${table.priority} >= 0`),
-  }),
-)
-
-export const userRole = sqliteTable(
-  'user_role',
-  {
-    userId: text('user_id')
-      .notNull()
-      .references(() => user.id),
-    roleId: int('role_id', { mode: 'number' })
-      .notNull()
-      .references(() => role.id),
-  },
-  table => ({
-    pk: primaryKey({ columns: [table.userId, table.roleId] }),
-  }),
-)
-
-// さすがに client_secret とかは環境変数側に持たせるべき(見れちゃうので)
-// → たぶん各々の OAuth ページとかを作ることになりそう
-// OAuth の接続情報に対する Reference Provider ID として使う
-export const oauthProvider = sqliteTable('oauth_provider', {
-  id: int('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-  name: text('name').notNull(),
-})
-
-export const oauthConnection = sqliteTable(
-  'oauth_connection',
-  {
-    userId: text('user_id')
-      .notNull()
-      .references(() => user.id),
-    providerId: int('provider_id', { mode: 'number' })
-      .notNull()
-      .references(() => oauthProvider.id),
-    providerUserId: text('provider_user_id').notNull(), // OAuth Provider 側の User ID
-    // 以下取れそうな情報を書く
-    email: text('email'),
-    name: text('name'),
-    profileImageUrl: text('profile_image_url'),
-  },
-  table => ({
-    pk: primaryKey({ columns: [table.userId, table.providerId] }),
-  }),
-)
-
-// ---------- OAuth 関連 ---------- //
+import { relations } from 'drizzle-orm'
+import { int, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const oauthClient = sqliteTable('oauth_client', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
   logo_url: text('logo_url'),
-  owner_id: text('owner_id')
-    .notNull()
-    .references(() => user.id),
+  owner_id: text('owner_id').notNull(),
 })
 
 export const oauthClientSecret = sqliteTable(
@@ -93,9 +18,7 @@ export const oauthClientSecret = sqliteTable(
       .references(() => oauthClient.id),
     secret: text('secret').notNull(),
     description: text('description'),
-    issued_by: text('issued_by')
-      .notNull()
-      .references(() => user.id),
+    issued_by: text('issued_by').notNull(),
     issued_at: int('issued_at', { mode: 'timestamp_ms' }).notNull(),
   },
   table => ({
@@ -142,9 +65,7 @@ export const oauthToken = sqliteTable('oauth_token', {
   client_id: text('client_id')
     .notNull()
     .references(() => oauthClient.id),
-  user_id: text('user_id')
-    .notNull()
-    .references(() => user.id),
+  user_id: text('user_id').notNull(),
   code: text('code').notNull().unique(),
   code_expires_at: int('code_expires_at', { mode: 'timestamp_ms' }).notNull(),
   code_used: int('code_used', { mode: 'boolean' }).notNull(),
@@ -172,40 +93,7 @@ export const oauthTokenScope = sqliteTable(
 
 // ---------- Relations ---------- //
 
-export const userRelations = relations(user, ({ many }) => ({
-  roles: many(role),
-  oauthConnections: many(oauthConnection),
-}))
-
-export const roleRelations = relations(role, ({ many }) => ({
-  users: many(user),
-}))
-
-export const userRoleRelations = relations(userRole, ({ one }) => ({
-  user: one(user, { fields: [userRole.userId], references: [user.id] }),
-  role: one(role, { fields: [userRole.roleId], references: [role.id] }),
-}))
-
-export const oauthProviderRelations = relations(oauthProvider, ({ many }) => ({
-  connections: many(oauthConnection),
-}))
-
-export const oauthConnectionRelations = relations(
-  oauthConnection,
-  ({ one }) => ({
-    user: one(user, {
-      fields: [oauthConnection.userId],
-      references: [user.id],
-    }),
-    provider: one(oauthProvider, {
-      fields: [oauthConnection.providerId],
-      references: [oauthProvider.id],
-    }),
-  }),
-)
-
-export const oauthClientRelations = relations(oauthClient, ({ one, many }) => ({
-  owner: one(user, { fields: [oauthClient.owner_id], references: [user.id] }),
+export const oauthClientRelations = relations(oauthClient, ({ many }) => ({
   secrets: many(oauthClientSecret),
   callbacks: many(oauthClientCallback),
   scopes: many(oauthClientScope),
@@ -217,10 +105,6 @@ export const oauthClientSecretRelations = relations(
     client: one(oauthClient, {
       fields: [oauthClientSecret.client_id],
       references: [oauthClient.id],
-    }),
-    issuer: one(user, {
-      fields: [oauthClientSecret.issued_by],
-      references: [user.id],
     }),
   }),
 )
@@ -259,7 +143,6 @@ export const oauthTokenRelations = relations(oauthToken, ({ one }) => ({
     fields: [oauthToken.client_id],
     references: [oauthClient.id],
   }),
-  user: one(user, { fields: [oauthToken.user_id], references: [user.id] }),
 }))
 
 export const oauthTokenScopeRelations = relations(

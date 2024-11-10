@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers'
 
 import * as schema from '../db/schema'
 import { HonoEnv } from '../load-context'
+import { IdpRepository } from '../repository/idp'
 
 import cbRoute from './cb'
 import goRoute from './go'
@@ -21,8 +22,9 @@ app.use(async (c, next) => {
 })
 
 app.use(async (c, next) => {
-  const dbClient = drizzle(c.env.DB, { schema })
+  const dbClient = drizzle(c.env.AUTH_DB, { schema })
   c.set('dbClient', dbClient)
+  c.set('idpClient', new IdpRepository(c.env.IDP_DB))
 
   await next()
 })

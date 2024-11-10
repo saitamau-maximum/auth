@@ -30,7 +30,6 @@ app.get(
       where: (oauthClient, { eq }) => eq(oauthClient.id, clientId),
       with: {
         callbacks: true,
-        owner: true,
         scopes: {
           with: {
             scope: true,
@@ -197,9 +196,7 @@ app.get(
         302,
       )
     }
-    const userInfo = await c.var.dbClient.query.user.findFirst({
-      where: (user, { eq }) => eq(user.id, userId),
-    })
+    const userInfo = await c.var.idpClient.findUserById(userId)
     if (!userInfo) {
       // 存在しないユーザー
       // そんなわけないのでログインしなおし
@@ -210,10 +207,21 @@ app.get(
       )
     }
 
+    // #40 で消されるっぽい？が一応
+    const clientOwner = (await c.var.idpClient.findUserById(
+      clientInfo.owner_id,
+    )) ?? {
+      // なにかおかしい
+      // とりあえず saitamau-maximum にしておく
+      id: 'saitamau-maximum',
+      displayName: 'saitamau-maximum',
+      profileImageUrl: '',
+    }
+
     const responseHtml = _Layout({
       children: _Authorize({
         appName: clientInfo.name,
-        appOwnerName: clientInfo.owner.displayName,
+        appOwnerName: clientOwner.displayName,
         scopes: clientInfo.scopes.map(data => ({
           name: data.scope.name,
           description: data.scope.description,
