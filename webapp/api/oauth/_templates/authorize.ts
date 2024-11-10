@@ -91,12 +91,16 @@ export const _Authorize = ({
           ${_Button({
             text: '承認する',
             variant: 'primary',
-            attributes: { type: 'submit', name: 'authorized', value: '1' },
+            type: 'submit',
+            name: 'authorized',
+            value: '1',
           })}
           ${_Button({
             text: '拒否する',
             variant: 'secondary',
-            attributes: { type: 'submit', name: 'authorized', value: '0' },
+            type: 'submit',
+            name: 'authorized',
+            value: '0',
           })}
         </div>
       </form>
@@ -109,13 +113,15 @@ export const _Authorize = ({
   <div
     class="flex items-center justify-center flex-wrap gap-2 absolute top-4 left-0 right-0"
   >
-    <img
-      src="${user.profileImageUrl}"
-      alt="${user.displayName} のアイコン"
-      width="32"
-      height="32"
-      class="rounded-full object-cover border-[1px] border-gray-200"
-    />
+    ${user.profileImageUrl
+      ? html`<img
+          src="${user.profileImageUrl}"
+          alt="${user.displayName} のアイコン"
+          width="32"
+          height="32"
+          class="rounded-full object-cover border-[1px] border-gray-200"
+        />`
+      : ''}
     <span class="md:text-lg text-gray-600 font-bold">${user.displayName}</span>
     <span class="md:text-sm text-xs text-gray-600"
       >さんとしてログインしています。</span
