@@ -214,14 +214,14 @@ app.get(
       // なにかおかしい
       // とりあえず saitamau-maximum にしておく
       id: 'saitamau-maximum',
-      displayName: 'saitamau-maximum',
-      profileImageUrl: '',
+      display_name: 'saitamau-maximum',
+      profile_image_url: '',
     }
 
     const responseHtml = _Layout({
       children: _Authorize({
         appName: clientInfo.name,
-        appOwnerName: clientOwner.displayName,
+        appOwnerName: clientOwner.display_name,
         scopes: clientInfo.scopes.map(data => ({
           name: data.scope.name,
           description: data.scope.description,

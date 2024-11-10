@@ -126,16 +126,16 @@ app.get(
       await c.var.idpClient.createUserWithOauth(
         {
           id: uuid,
-          displayName: user.login,
-          profileImageUrl: user.avatar_url,
+          display_name: user.login,
+          profile_image_url: user.avatar_url,
         },
         {
-          userId: uuid,
-          providerId: 1,
-          providerUserId: String(user.id),
+          user_id: uuid,
+          provider_id: 1,
+          provider_user_id: String(user.id),
           email: user.email,
           name: user.login,
-          profileImageUrl: user.avatar_url,
+          profile_image_url: user.avatar_url,
         },
       )
       session.set('user_id', uuid)
