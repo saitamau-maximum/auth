@@ -13,7 +13,6 @@ export interface Env {
   PRIVKEY: string
   SESSION_SECRET: string
   CF_PAGES_URL: string
-  DB: D1Database
   IDP_DB: D1Database
   AUTH_DB: D1Database
 }
