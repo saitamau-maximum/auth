@@ -119,7 +119,10 @@ app.get(
     }
 
     // すでになければ DB にユーザー情報を格納
-    const oauthConnInfo = await c.var.idpClient.getUserIdByGithubId(user.id)
+    const oauthConnInfo = await c.var.idpClient.getUserIdByOauthId(
+      1,
+      String(user.id),
+    )
     if (!oauthConnInfo) {
       const uuid = crypto.randomUUID().replaceAll('-', '')
       // とりあえず仮情報で埋める

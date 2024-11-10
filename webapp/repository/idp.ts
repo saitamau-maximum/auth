@@ -43,11 +43,12 @@ export class IdpRepository {
     return await this.getStmt.userById.bind(id).first()
   }
 
-  async getUserIdByGithubId(
-    githubId: number,
+  async getUserIdByOauthId(
+    oauthProviderId: number,
+    oauthUserId: string,
   ): Promise<{ user_id: string } | null> {
     return await this.getStmt.userIdByOauthId
-      .bind(1, githubId.toString())
+      .bind(oauthProviderId, oauthUserId)
       .first()
   }
 
