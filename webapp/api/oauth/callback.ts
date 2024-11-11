@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator'
 import { derivePublicKey, importKey } from '@saitamau-maximum/auth/internal'
-import { oauthToken, oauthTokenScope } from 'db/schema'
+import { token, tokenScope } from 'db/schema'
 import { Hono } from 'hono'
 import { HonoEnv } from 'load-context'
 import { validateAuthToken } from 'utils/auth-token.server'
@@ -103,9 +103,8 @@ app.post(
     // scope 取得
     const requestedScopes = new Set(scope ? scope.split(' ') : [])
     const scopes = (
-      await c.var.dbClient.query.oauthClientScope.findMany({
-        where: (oauthClientScope, { eq }) =>
-          eq(oauthClientScope.client_id, client_id),
+      await c.var.dbClient.query.clientScope.findMany({
+        where: (clientScope, { eq }) => eq(clientScope.client_id, client_id),
         with: {
           scope: true,
         },
@@ -132,7 +131,7 @@ app.post(
     // DB に格納
     // transaction が使えないが、 batch だと autoincrement な token id を取得できないので、 Cloudflare の力を信じてふつうに insert する
     const tokenInsertRes = await c.var.dbClient
-      .insert(oauthToken)
+      .insert(token)
       .values({
         client_id,
         user_id: userId,
@@ -153,14 +152,12 @@ app.post(
       // redirectTo.searchParams.append('error_uri', '') // そのうち書きたいね
       return c.redirect(redirectTo.href, 302)
     }
-    const tokenScopeInsertRes = await c.var.dbClient
-      .insert(oauthTokenScope)
-      .values(
-        scopes.map(scope => ({
-          token_id: tokenInsertRes[0].id,
-          scope_id: scope.id,
-        })),
-      )
+    const tokenScopeInsertRes = await c.var.dbClient.insert(tokenScope).values(
+      scopes.map(scope => ({
+        token_id: tokenInsertRes[0].id,
+        scope_id: scope.id,
+      })),
+    )
     if (!tokenScopeInsertRes.success) {
       redirectTo.searchParams.append('error', 'server_error')
       redirectTo.searchParams.append(

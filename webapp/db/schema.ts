@@ -2,7 +2,7 @@
 import { relations } from 'drizzle-orm'
 import { int, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-export const oauthClient = sqliteTable('oauth_client', {
+export const client = sqliteTable('client', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
@@ -10,12 +10,12 @@ export const oauthClient = sqliteTable('oauth_client', {
   owner_id: text('owner_id').notNull(),
 })
 
-export const oauthClientSecret = sqliteTable(
-  'oauth_client_secret',
+export const clientSecret = sqliteTable(
+  'client_secret',
   {
     client_id: text('client_id')
       .notNull()
-      .references(() => oauthClient.id),
+      .references(() => client.id),
     secret: text('secret').notNull(),
     description: text('description'),
     issued_by: text('issued_by').notNull(),
@@ -26,12 +26,12 @@ export const oauthClientSecret = sqliteTable(
   }),
 )
 
-export const oauthClientCallback = sqliteTable(
-  'oauth_client_callback',
+export const clientCallback = sqliteTable(
+  'client_callback',
   {
     client_id: text('client_id')
       .notNull()
-      .references(() => oauthClient.id),
+      .references(() => client.id),
     callback_url: text('callback_url').notNull(),
   },
   table => ({
@@ -39,32 +39,32 @@ export const oauthClientCallback = sqliteTable(
   }),
 )
 
-export const oauthScope = sqliteTable('oauth_scope', {
+export const scope = sqliteTable('scope', {
   id: int('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
   description: text('description'),
 })
 
-export const oauthClientScope = sqliteTable(
-  'oauth_client_scope',
+export const clientScope = sqliteTable(
+  'client_scope',
   {
     client_id: text('client_id')
       .notNull()
-      .references(() => oauthClient.id),
+      .references(() => client.id),
     scope_id: int('scope_id', { mode: 'number' })
       .notNull()
-      .references(() => oauthScope.id),
+      .references(() => scope.id),
   },
   table => ({
     pk: primaryKey({ columns: [table.client_id, table.scope_id] }),
   }),
 )
 
-export const oauthToken = sqliteTable('oauth_token', {
+export const token = sqliteTable('token', {
   id: int('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
   client_id: text('client_id')
     .notNull()
-    .references(() => oauthClient.id),
+    .references(() => client.id),
   user_id: text('user_id').notNull(),
   code: text('code').notNull().unique(),
   code_expires_at: int('code_expires_at', { mode: 'timestamp_ms' }).notNull(),
@@ -76,15 +76,15 @@ export const oauthToken = sqliteTable('oauth_token', {
   }).notNull(),
 })
 
-export const oauthTokenScope = sqliteTable(
-  'oauth_token_scope',
+export const tokenScope = sqliteTable(
+  'token_scope',
   {
     token_id: int('token_id', { mode: 'number' })
       .notNull()
-      .references(() => oauthToken.id),
+      .references(() => token.id),
     scope_id: int('scope_id', { mode: 'number' })
       .notNull()
-      .references(() => oauthScope.id),
+      .references(() => scope.id),
   },
   table => ({
     pk: primaryKey({ columns: [table.token_id, table.scope_id] }),
@@ -93,68 +93,56 @@ export const oauthTokenScope = sqliteTable(
 
 // ---------- Relations ---------- //
 
-export const oauthClientRelations = relations(oauthClient, ({ many }) => ({
-  secrets: many(oauthClientSecret),
-  callbacks: many(oauthClientCallback),
-  scopes: many(oauthClientScope),
+export const clientRelations = relations(client, ({ many }) => ({
+  secrets: many(clientSecret),
+  callbacks: many(clientCallback),
+  scopes: many(clientScope),
 }))
 
-export const oauthClientSecretRelations = relations(
-  oauthClientSecret,
-  ({ one }) => ({
-    client: one(oauthClient, {
-      fields: [oauthClientSecret.client_id],
-      references: [oauthClient.id],
-    }),
-  }),
-)
-
-export const oauthClientCallbackRelations = relations(
-  oauthClientCallback,
-  ({ one }) => ({
-    client: one(oauthClient, {
-      fields: [oauthClientCallback.client_id],
-      references: [oauthClient.id],
-    }),
-  }),
-)
-
-export const oauthScopeRelations = relations(oauthScope, ({ many }) => ({
-  clients: many(oauthClientScope),
-  tokens: many(oauthTokenScope),
-}))
-
-export const oauthClientScopeRelations = relations(
-  oauthClientScope,
-  ({ one }) => ({
-    client: one(oauthClient, {
-      fields: [oauthClientScope.client_id],
-      references: [oauthClient.id],
-    }),
-    scope: one(oauthScope, {
-      fields: [oauthClientScope.scope_id],
-      references: [oauthScope.id],
-    }),
-  }),
-)
-
-export const oauthTokenRelations = relations(oauthToken, ({ one }) => ({
-  client: one(oauthClient, {
-    fields: [oauthToken.client_id],
-    references: [oauthClient.id],
+export const clientSecretRelations = relations(clientSecret, ({ one }) => ({
+  client: one(client, {
+    fields: [clientSecret.client_id],
+    references: [client.id],
   }),
 }))
 
-export const oauthTokenScopeRelations = relations(
-  oauthTokenScope,
-  ({ one }) => ({
-    token: one(oauthToken, {
-      fields: [oauthTokenScope.token_id],
-      references: [oauthToken.id],
-    }),
-    scope: one(oauthScope, {
-      fields: [oauthTokenScope.scope_id],
-      references: [oauthScope.id],
-    }),
+export const clientCallbackRelations = relations(clientCallback, ({ one }) => ({
+  client: one(client, {
+    fields: [clientCallback.client_id],
+    references: [client.id],
   }),
-)
+}))
+
+export const scopeRelations = relations(scope, ({ many }) => ({
+  clients: many(clientScope),
+  tokens: many(tokenScope),
+}))
+
+export const clientScopeRelations = relations(clientScope, ({ one }) => ({
+  client: one(client, {
+    fields: [clientScope.client_id],
+    references: [client.id],
+  }),
+  scope: one(scope, {
+    fields: [clientScope.scope_id],
+    references: [scope.id],
+  }),
+}))
+
+export const tokenRelations = relations(token, ({ one }) => ({
+  client: one(client, {
+    fields: [token.client_id],
+    references: [client.id],
+  }),
+}))
+
+export const tokenScopeRelations = relations(tokenScope, ({ one }) => ({
+  token: one(token, {
+    fields: [tokenScope.token_id],
+    references: [token.id],
+  }),
+  scope: one(scope, {
+    fields: [tokenScope.scope_id],
+    references: [scope.id],
+  }),
+}))
