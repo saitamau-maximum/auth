@@ -213,7 +213,7 @@ app.get(
     const responseHtml = _Layout({
       children: _Authorize({
         appName: clientInfo.name,
-        appOwnerName: clientInfo.owner.displayName,
+        appLogo: clientInfo.logo_url,
         scopes: clientInfo.scopes.map(data => ({
           name: data.scope.name,
           description: data.scope.description,
@@ -225,6 +225,10 @@ app.get(
           scope,
           token,
           nowUnixMs,
+        },
+        user: {
+          displayName: userInfo.displayName,
+          profileImageUrl: userInfo.profileImageUrl,
         },
       }),
       subtitle: clientInfo.name,
