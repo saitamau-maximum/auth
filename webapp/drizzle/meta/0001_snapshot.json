@@ -1,11 +1,11 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "99129d81-620c-40f5-bc07-5ebbdd7b5686",
-  "prevId": "b8217cfe-d5ba-45da-8a4d-a53fc8ae31e8",
+  "id": "94763c92-4e0a-41d2-8b8c-5c54c96a1303",
+  "prevId": "4a767bc2-39e7-44d7-bb90-b8c740b6b2ba",
   "tables": {
-    "oauth_client": {
-      "name": "oauth_client",
+    "client": {
+      "name": "client",
       "columns": {
         "id": {
           "name": "id",
@@ -44,23 +44,13 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "oauth_client_owner_id_user_id_fk": {
-          "name": "oauth_client_owner_id_user_id_fk",
-          "tableFrom": "oauth_client",
-          "tableTo": "user",
-          "columnsFrom": ["owner_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "oauth_client_callback": {
-      "name": "oauth_client_callback",
+    "client_callback": {
+      "name": "client_callback",
       "columns": {
         "client_id": {
           "name": "client_id",
@@ -79,10 +69,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "oauth_client_callback_client_id_oauth_client_id_fk": {
-          "name": "oauth_client_callback_client_id_oauth_client_id_fk",
-          "tableFrom": "oauth_client_callback",
-          "tableTo": "oauth_client",
+        "client_callback_client_id_client_id_fk": {
+          "name": "client_callback_client_id_client_id_fk",
+          "tableFrom": "client_callback",
+          "tableTo": "client",
           "columnsFrom": ["client_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
@@ -90,16 +80,16 @@
         }
       },
       "compositePrimaryKeys": {
-        "oauth_client_callback_client_id_callback_url_pk": {
+        "client_callback_client_id_callback_url_pk": {
           "columns": ["client_id", "callback_url"],
-          "name": "oauth_client_callback_client_id_callback_url_pk"
+          "name": "client_callback_client_id_callback_url_pk"
         }
       },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "oauth_client_scope": {
-      "name": "oauth_client_scope",
+    "client_scope": {
+      "name": "client_scope",
       "columns": {
         "client_id": {
           "name": "client_id",
@@ -118,19 +108,19 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "oauth_client_scope_client_id_oauth_client_id_fk": {
-          "name": "oauth_client_scope_client_id_oauth_client_id_fk",
-          "tableFrom": "oauth_client_scope",
-          "tableTo": "oauth_client",
+        "client_scope_client_id_client_id_fk": {
+          "name": "client_scope_client_id_client_id_fk",
+          "tableFrom": "client_scope",
+          "tableTo": "client",
           "columnsFrom": ["client_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "oauth_client_scope_scope_id_oauth_scope_id_fk": {
-          "name": "oauth_client_scope_scope_id_oauth_scope_id_fk",
-          "tableFrom": "oauth_client_scope",
-          "tableTo": "oauth_scope",
+        "client_scope_scope_id_scope_id_fk": {
+          "name": "client_scope_scope_id_scope_id_fk",
+          "tableFrom": "client_scope",
+          "tableTo": "scope",
           "columnsFrom": ["scope_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
@@ -138,16 +128,16 @@
         }
       },
       "compositePrimaryKeys": {
-        "oauth_client_scope_client_id_scope_id_pk": {
+        "client_scope_client_id_scope_id_pk": {
           "columns": ["client_id", "scope_id"],
-          "name": "oauth_client_scope_client_id_scope_id_pk"
+          "name": "client_scope_client_id_scope_id_pk"
         }
       },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "oauth_client_secret": {
-      "name": "oauth_client_secret",
+    "client_secret": {
+      "name": "client_secret",
       "columns": {
         "client_id": {
           "name": "client_id",
@@ -187,136 +177,27 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "oauth_client_secret_client_id_oauth_client_id_fk": {
-          "name": "oauth_client_secret_client_id_oauth_client_id_fk",
-          "tableFrom": "oauth_client_secret",
-          "tableTo": "oauth_client",
+        "client_secret_client_id_client_id_fk": {
+          "name": "client_secret_client_id_client_id_fk",
+          "tableFrom": "client_secret",
+          "tableTo": "client",
           "columnsFrom": ["client_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "oauth_client_secret_issued_by_user_id_fk": {
-          "name": "oauth_client_secret_issued_by_user_id_fk",
-          "tableFrom": "oauth_client_secret",
-          "tableTo": "user",
-          "columnsFrom": ["issued_by"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
-        "oauth_client_secret_client_id_secret_pk": {
+        "client_secret_client_id_secret_pk": {
           "columns": ["client_id", "secret"],
-          "name": "oauth_client_secret_client_id_secret_pk"
+          "name": "client_secret_client_id_secret_pk"
         }
       },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "oauth_connection": {
-      "name": "oauth_connection",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "provider_id": {
-          "name": "provider_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "provider_user_id": {
-          "name": "provider_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "profile_image_url": {
-          "name": "profile_image_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "oauth_connection_user_id_user_id_fk": {
-          "name": "oauth_connection_user_id_user_id_fk",
-          "tableFrom": "oauth_connection",
-          "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "oauth_connection_provider_id_oauth_provider_id_fk": {
-          "name": "oauth_connection_provider_id_oauth_provider_id_fk",
-          "tableFrom": "oauth_connection",
-          "tableTo": "oauth_provider",
-          "columnsFrom": ["provider_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "oauth_connection_user_id_provider_id_pk": {
-          "columns": ["user_id", "provider_id"],
-          "name": "oauth_connection_user_id_provider_id_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "oauth_provider": {
-      "name": "oauth_provider",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "oauth_scope": {
-      "name": "oauth_scope",
+    "scope": {
+      "name": "scope",
       "columns": {
         "id": {
           "name": "id",
@@ -341,8 +222,8 @@
         }
       },
       "indexes": {
-        "oauth_scope_name_unique": {
-          "name": "oauth_scope_name_unique",
+        "scope_name_unique": {
+          "name": "scope_name_unique",
           "columns": ["name"],
           "isUnique": true
         }
@@ -352,8 +233,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "oauth_token": {
-      "name": "oauth_token",
+    "token": {
+      "name": "token",
       "columns": {
         "id": {
           "name": "id",
@@ -420,32 +301,23 @@
         }
       },
       "indexes": {
-        "oauth_token_code_unique": {
-          "name": "oauth_token_code_unique",
+        "token_code_unique": {
+          "name": "token_code_unique",
           "columns": ["code"],
           "isUnique": true
         },
-        "oauth_token_access_token_unique": {
-          "name": "oauth_token_access_token_unique",
+        "token_access_token_unique": {
+          "name": "token_access_token_unique",
           "columns": ["access_token"],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "oauth_token_client_id_oauth_client_id_fk": {
-          "name": "oauth_token_client_id_oauth_client_id_fk",
-          "tableFrom": "oauth_token",
-          "tableTo": "oauth_client",
+        "token_client_id_client_id_fk": {
+          "name": "token_client_id_client_id_fk",
+          "tableFrom": "token",
+          "tableTo": "client",
           "columnsFrom": ["client_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "oauth_token_user_id_user_id_fk": {
-          "name": "oauth_token_user_id_user_id_fk",
-          "tableFrom": "oauth_token",
-          "tableTo": "user",
-          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -455,8 +327,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "oauth_token_scope": {
-      "name": "oauth_token_scope",
+    "token_scope": {
+      "name": "token_scope",
       "columns": {
         "token_id": {
           "name": "token_id",
@@ -475,19 +347,19 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "oauth_token_scope_token_id_oauth_token_id_fk": {
-          "name": "oauth_token_scope_token_id_oauth_token_id_fk",
-          "tableFrom": "oauth_token_scope",
-          "tableTo": "oauth_token",
+        "token_scope_token_id_token_id_fk": {
+          "name": "token_scope_token_id_token_id_fk",
+          "tableFrom": "token_scope",
+          "tableTo": "token",
           "columnsFrom": ["token_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "oauth_token_scope_scope_id_oauth_scope_id_fk": {
-          "name": "oauth_token_scope_scope_id_oauth_scope_id_fk",
-          "tableFrom": "oauth_token_scope",
-          "tableTo": "oauth_scope",
+        "token_scope_scope_id_scope_id_fk": {
+          "name": "token_scope_scope_id_scope_id_fk",
+          "tableFrom": "token_scope",
+          "tableTo": "scope",
           "columnsFrom": ["scope_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
@@ -495,131 +367,9 @@
         }
       },
       "compositePrimaryKeys": {
-        "oauth_token_scope_token_id_scope_id_pk": {
+        "token_scope_token_id_scope_id_pk": {
           "columns": ["token_id", "scope_id"],
-          "name": "oauth_token_scope_token_id_scope_id_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "role": {
-      "name": "role",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "priority": {
-          "name": "priority",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "nonneg_priority": {
-          "name": "nonneg_priority",
-          "value": "\"role\".\"priority\" >= 0"
-        }
-      }
-    },
-    "user": {
-      "name": "user",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "display_name": {
-          "name": "display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "profile_image_url": {
-          "name": "profile_image_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "user_role": {
-      "name": "user_role",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "role_id": {
-          "name": "role_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "user_role_user_id_user_id_fk": {
-          "name": "user_role_user_id_user_id_fk",
-          "tableFrom": "user_role",
-          "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "user_role_role_id_role_id_fk": {
-          "name": "user_role_role_id_role_id_fk",
-          "tableFrom": "user_role",
-          "tableTo": "role",
-          "columnsFrom": ["role_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "user_role_user_id_role_id_pk": {
-          "columns": ["user_id", "role_id"],
-          "name": "user_role_user_id_role_id_pk"
+          "name": "token_scope_token_id_scope_id_pk"
         }
       },
       "uniqueConstraints": {},
@@ -630,7 +380,15 @@
   "enums": {},
   "_meta": {
     "schemas": {},
-    "tables": {},
+    "tables": {
+      "\"oauth_client\"": "\"client\"",
+      "\"oauth_client_callback\"": "\"client_callback\"",
+      "\"oauth_client_scope\"": "\"client_scope\"",
+      "\"oauth_client_secret\"": "\"client_secret\"",
+      "\"oauth_scope\"": "\"scope\"",
+      "\"oauth_token\"": "\"token\"",
+      "\"oauth_token_scope\"": "\"token_scope\""
+    },
     "columns": {}
   },
   "internal": {

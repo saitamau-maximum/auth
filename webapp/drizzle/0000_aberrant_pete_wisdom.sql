@@ -3,8 +3,7 @@ CREATE TABLE `oauth_client` (
 	`name` text NOT NULL,
 	`description` text,
 	`logo_url` text,
-	`owner_id` text NOT NULL,
-	FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	`owner_id` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `oauth_client_callback` (
@@ -29,8 +28,7 @@ CREATE TABLE `oauth_client_secret` (
 	`issued_by` text NOT NULL,
 	`issued_at` integer NOT NULL,
 	PRIMARY KEY(`client_id`, `secret`),
-	FOREIGN KEY (`client_id`) REFERENCES `oauth_client`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`issued_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`client_id`) REFERENCES `oauth_client`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `oauth_scope` (
@@ -50,8 +48,7 @@ CREATE TABLE `oauth_token` (
 	`redirect_uri` text NOT NULL,
 	`access_token` text NOT NULL,
 	`access_token_expires_at` integer NOT NULL,
-	FOREIGN KEY (`client_id`) REFERENCES `oauth_client`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`client_id`) REFERENCES `oauth_client`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `oauth_token_code_unique` ON `oauth_token` (`code`);--> statement-breakpoint
@@ -63,17 +60,3 @@ CREATE TABLE `oauth_token_scope` (
 	FOREIGN KEY (`token_id`) REFERENCES `oauth_token`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`scope_id`) REFERENCES `oauth_scope`(`id`) ON UPDATE no action ON DELETE no action
 );
---> statement-breakpoint
-PRAGMA foreign_keys=OFF;--> statement-breakpoint
-CREATE TABLE `__new_role` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`name` text NOT NULL,
-	`description` text,
-	`priority` integer NOT NULL,
-	CONSTRAINT "nonneg_priority" CHECK("__new_role"."priority" >= 0)
-);
---> statement-breakpoint
-INSERT INTO `__new_role`("id", "name", "description", "priority") SELECT "id", "name", "description", "priority" FROM `role`;--> statement-breakpoint
-DROP TABLE `role`;--> statement-breakpoint
-ALTER TABLE `__new_role` RENAME TO `role`;--> statement-breakpoint
-PRAGMA foreign_keys=ON;

@@ -26,11 +26,10 @@ app.get(
     }
 
     // client_id が DB にあるか
-    const client = await c.var.dbClient.query.oauthClient.findFirst({
-      where: (oauthClient, { eq }) => eq(oauthClient.id, clientId),
+    const client = await c.var.dbClient.query.client.findFirst({
+      where: (client, { eq }) => eq(client.id, clientId),
       with: {
         callbacks: true,
-        owner: true,
         scopes: {
           with: {
             scope: true,
@@ -197,9 +196,7 @@ app.get(
         302,
       )
     }
-    const userInfo = await c.var.dbClient.query.user.findFirst({
-      where: (user, { eq }) => eq(user.id, userId),
-    })
+    const userInfo = await c.var.idpClient.findUserById(userId)
     if (!userInfo) {
       // 存在しないユーザー
       // そんなわけないのでログインしなおし
@@ -227,8 +224,8 @@ app.get(
           nowUnixMs,
         },
         user: {
-          displayName: userInfo.displayName,
-          profileImageUrl: userInfo.profileImageUrl,
+          displayName: userInfo.display_name,
+          profileImageUrl: userInfo.profile_image_url,
         },
       }),
       subtitle: clientInfo.name,

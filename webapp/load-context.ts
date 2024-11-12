@@ -2,6 +2,7 @@ import { DrizzleD1Database } from 'drizzle-orm/d1'
 import { type PlatformProxy } from 'wrangler'
 
 import * as schema from './db/schema'
+import { IdpRepository } from './repository/idp'
 
 export interface Env {
   GITHUB_APP_ID: string
@@ -12,13 +13,15 @@ export interface Env {
   PRIVKEY: string
   SESSION_SECRET: string
   CF_PAGES_URL: string
-  DB: D1Database
+  IDP_DB: D1Database
+  AUTH_DB: D1Database
 }
 
 export interface HonoEnv {
   Bindings: Env
   Variables: {
     dbClient: DrizzleD1Database<typeof schema>
+    idpClient: IdpRepository
   }
 }
 

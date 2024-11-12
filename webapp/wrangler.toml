@@ -7,9 +7,15 @@ GITHUB_APP_ID = "387915"
 GITHUB_OAUTH_ID = "Iv1.3fef0e17322d38ce"
 
 [[d1_databases]]
-database_id = "bf63ee19-d4b2-44e8-890a-dcbf7510e8e2"
-binding = "DB"
-database_name = "maximum-idp-db-for-preview"
+# ここでは Migration 管理しない; saitamau-maximum/id 側でやる
+database_id = "a6e54aed-340c-4495-9010-6e679c83bc45"
+binding = "IDP_DB"
+database_name = "idp-db-preview"
+
+[[d1_databases]]
+database_id = "9e8d2c0d-94ae-4d97-82fc-95a643d29b9f"
+binding = "AUTH_DB"
+database_name = "auth-db"
 migrations_dir = "drizzle"
 
 [env.production.vars]
@@ -18,7 +24,12 @@ GITHUB_APP_ID = "387915"
 GITHUB_OAUTH_ID = "Iv1.3fef0e17322d38ce"
 
 [[env.production.d1_databases]]
-database_id = "737a5b09-bcab-4253-8ff2-4a44313d87f1"
-binding = "DB"
-database_name = "maximum-idp-db"
+database_id = "7b42a115-ebac-47c9-9388-759082eb0d22"
+binding = "IDP_DB"
+database_name = "idp-db"
+
+[[env.production.d1_databases]]
+database_id = "9e8d2c0d-94ae-4d97-82fc-95a643d29b9f"
+binding = "AUTH_DB"
+database_name = "auth-db"
 migrations_dir = "drizzle"
