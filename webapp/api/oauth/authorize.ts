@@ -207,17 +207,6 @@ app.get(
       )
     }
 
-    // #40 で消されるっぽい？が一応
-    const clientOwner = (await c.var.idpClient.findUserById(
-      clientInfo.owner_id,
-    )) ?? {
-      // なにかおかしい
-      // とりあえず saitamau-maximum にしておく
-      id: 'saitamau-maximum',
-      display_name: 'saitamau-maximum',
-      profile_image_url: '',
-    }
-
     const responseHtml = _Layout({
       children: _Authorize({
         appName: clientInfo.name,
@@ -235,8 +224,8 @@ app.get(
           nowUnixMs,
         },
         user: {
-          displayName: userInfo.displayName,
-          profileImageUrl: userInfo.profileImageUrl,
+          displayName: userInfo.display_name,
+          profileImageUrl: userInfo.profile_image_url,
         },
       }),
       subtitle: clientInfo.name,
