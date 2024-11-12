@@ -26,7 +26,7 @@ export const _Layout = ({ subtitle, children }: LayoutProps) => html`
         ${children}
       </main>
       <footer
-        class="text-sm text-gray-500 absolute bottom-2 left-1/2 transform -translate-x-1/2"
+        class="text-sm text-gray-500 absolute bottom-2 w-full text-center"
       >
         &copy; ${new Date().getFullYear()} ${ORG_NAME}
       </footer>
