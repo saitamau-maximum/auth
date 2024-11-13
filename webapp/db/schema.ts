@@ -69,7 +69,7 @@ export const token = sqliteTable('token', {
   code: text('code').notNull().unique(),
   code_expires_at: int('code_expires_at', { mode: 'timestamp_ms' }).notNull(),
   code_used: int('code_used', { mode: 'boolean' }).notNull(),
-  redirect_uri: text('redirect_uri').notNull(),
+  redirect_uri: text('redirect_uri'),
   access_token: text('access_token').notNull().unique(),
   access_token_expires_at: int('access_token_expires_at', {
     mode: 'timestamp_ms',
@@ -129,11 +129,12 @@ export const clientScopeRelations = relations(clientScope, ({ one }) => ({
   }),
 }))
 
-export const tokenRelations = relations(token, ({ one }) => ({
+export const tokenRelations = relations(token, ({ one, many }) => ({
   client: one(client, {
     fields: [token.client_id],
     references: [client.id],
   }),
+  scopes: many(tokenScope),
 }))
 
 export const tokenScopeRelations = relations(tokenScope, ({ one }) => ({

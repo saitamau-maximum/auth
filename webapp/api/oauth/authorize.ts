@@ -40,12 +40,14 @@ app.get(
     if (!client) return c.text('Bad Request: client_id not registered', 400)
 
     // redirect_uri が複数ないことをチェック
-    // eslint-disable-next-line prefer-const
-    let { data: redirectUri, success: success2 } = z
+    // redirectUri: パラメータで指定されたやつ、 null 許容
+    // redirectTo: 最終的にリダイレクトするやつ、 non-null
+    const { data: redirectUri, success: success2 } = z
       .string()
       .url()
       .optional()
       .safeParse(query['redirect_uri'])
+    let redirectTo: string = redirectUri || ''
     if (!success2) {
       return c.text('Bad Request: invalid redirect_uri', 400)
     }
@@ -60,7 +62,7 @@ app.get(
       }
 
       // DB 内に登録されているものを callback として扱う
-      redirectUri = client.callbacks[0].callback_url
+      redirectTo = client.callbacks[0].callback_url
     } else {
       // Redirect URI のクエリパラメータ部分は変わることを許容する
       const normalizedUri = new URL(redirectUri)
@@ -73,6 +75,11 @@ app.get(
       if (!registeredUri) {
         return c.text('Bad Request: redirect_uri not registered', 400)
       }
+    }
+
+    // redirectTo !== "" を assert
+    if (redirectTo === '') {
+      return c.text('Internal Server Error: redirect_uri is empty', 500)
     }
 
     const { data: state, success: success3 } = z
@@ -90,7 +97,7 @@ app.get(
       description: string,
       _errorUri: string,
     ) => {
-      const callback = new URL(redirectUri)
+      const callback = new URL(redirectTo)
 
       callback.searchParams.append('error', error)
       callback.searchParams.append('error_description', description)
@@ -163,13 +170,14 @@ app.get(
     return {
       clientId,
       redirectUri,
+      redirectTo,
       state,
       scope,
       clientInfo: client,
     }
   }),
   async c => {
-    const { clientId, redirectUri, state, scope, clientInfo } =
+    const { clientId, redirectUri, redirectTo, state, scope, clientInfo } =
       c.req.valid('query')
     const nowUnixMs = Date.now()
 
@@ -217,7 +225,7 @@ app.get(
         })),
         oauthFields: {
           clientId,
-          redirectUri,
+          redirectUri: redirectTo,
           state,
           scope,
           token,
