@@ -3,7 +3,7 @@
 
 interface Param {
   clientId: string
-  redirectUri: string
+  redirectUri?: string
   state?: string
   scope?: string
   time: number
@@ -21,7 +21,7 @@ interface ValidateParam extends Param {
 const content = (param: Param) => {
   const p = new URLSearchParams()
   p.append('client_id', param.clientId)
-  p.append('redirect_uri', param.redirectUri)
+  if (param.redirectUri) p.append('redirect_uri', param.redirectUri)
   if (param.state) p.append('state', param.state)
   if (param.scope) p.append('scope', param.scope)
   p.append('time', param.time.toString())

@@ -17,7 +17,7 @@ app.post(
     'form',
     z.object({
       client_id: z.string(),
-      redirect_uri: z.string().url(),
+      redirect_uri: z.string().url().optional(),
       state: z.string().optional(),
       scope: z
         .string()
@@ -88,7 +88,23 @@ app.post(
       return c.text('Bad Request: authorization request expired', 400)
     }
 
-    const redirectTo = new URL(redirect_uri)
+    let redirectTo: URL
+    if (redirect_uri) {
+      redirectTo = new URL(redirect_uri)
+    } else {
+      // DB から読み込み
+      // `/authorize` 側で client_id に対応する callback_url は必ず存在して 1 つだけであることを保証している
+      const clientCallback =
+        await c.var.dbClient.query.clientCallback.findFirst({
+          where: (clientCallback, { eq }) =>
+            eq(clientCallback.client_id, client_id),
+        })
+      if (!clientCallback) {
+        return c.text('Internal Server Error: client callback not found', 500)
+      }
+      redirectTo = new URL(clientCallback.callback_url)
+    }
+
     redirectTo.searchParams.append('state', state || '')
     if (authorized === '0') {
       redirectTo.searchParams.append('error', 'access_denied')
