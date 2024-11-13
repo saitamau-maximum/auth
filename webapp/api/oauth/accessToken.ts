@@ -136,10 +136,11 @@ app.post(
       // そのレコードを削除
       // 失敗していても response は変わらないので無視
       await c.var.dbClient.batch([
-        c.var.dbClient.delete(token).where(eq(token.id, tokenInfo.id)),
+        // これ順番逆にすると外部キー制約で落ちるよ (戒め)
         c.var.dbClient
           .delete(tokenScope)
           .where(eq(tokenScope.token_id, tokenInfo.id)),
+        c.var.dbClient.delete(token).where(eq(token.id, tokenInfo.id)),
       ])
       return c.json(
         {
