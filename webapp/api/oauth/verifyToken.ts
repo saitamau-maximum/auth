@@ -7,29 +7,29 @@ const app = new Hono<HonoEnv>()
 
 // 仕様はここ参照: https://github.com/saitamau-maximum/auth/issues/43
 
-type ResponseType =
-  | {
-      valid: true
-      client: {
-        id: string
-        name: string
-        description: string | null
-        logo_url: string | null
-        owner_id: string
-      }
-      user_id: string
-      expires_at: number
-      scopes: string[]
-    }
-  | {
-      valid: false
-      client: null
-      user_id: null
-      expires_at: null
-      scopes: null
-    }
+interface ValidResponseType {
+  valid: true
+  client: {
+    id: string
+    name: string
+    description: string | null
+    logo_url: string | null
+    owner_id: string
+  }
+  user_id: string
+  expires_at: number
+  scopes: string[]
+}
 
-const INVALID_REQUEST_RESPONSE: ResponseType = {
+interface InvalidResponseType {
+  valid: false
+  client: null
+  user_id: null
+  expires_at: null
+  scopes: null
+}
+
+const INVALID_REQUEST_RESPONSE: InvalidResponseType = {
   valid: false,
   client: null,
   user_id: null,
@@ -45,7 +45,8 @@ app.post(
       access_token: z.string(),
     }),
     async (res, c) => {
-      if (!res.success) return c.json(INVALID_REQUEST_RESPONSE, 400)
+      if (!res.success)
+        return c.json<InvalidResponseType>(INVALID_REQUEST_RESPONSE, 400)
     },
   ),
   async c => {
@@ -75,19 +76,16 @@ app.post(
 
     // Token が見つからない場合
     if (!tokenInfo) {
-      return c.json(INVALID_REQUEST_RESPONSE, 404)
+      return c.json<InvalidResponseType>(INVALID_REQUEST_RESPONSE, 404)
     }
 
-    return c.json<ResponseType>(
-      {
-        valid: true,
-        client: tokenInfo.client,
-        user_id: tokenInfo.user_id,
-        expires_at: tokenInfo.access_token_expires_at.getTime(),
-        scopes: tokenInfo.scopes.map(s => s.scope.name),
-      },
-      200,
-    )
+    return c.json<ValidResponseType>({
+      valid: true,
+      client: tokenInfo.client,
+      user_id: tokenInfo.user_id,
+      expires_at: tokenInfo.access_token_expires_at.getTime(),
+      scopes: tokenInfo.scopes.map(s => s.scope.name),
+    })
   },
 )
 
