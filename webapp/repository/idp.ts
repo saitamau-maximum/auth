@@ -1,10 +1,11 @@
+/* eslint-disable sort-exports/sort-exports */
 // saitamau-maximum/id の db/schema.ts 参照
-interface IUserInfo {
+export interface IUserInfo {
   id: string
   display_name: string
   profile_image_url: string | null
 }
-interface IOauthConnection {
+export interface IOauthConnection {
   user_id: string
   provider_id: number
   provider_user_id: string
