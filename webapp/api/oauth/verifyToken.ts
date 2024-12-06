@@ -1,7 +1,10 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { HonoEnv } from 'load-context'
 import { z } from 'zod'
+
+import { READ_SCOPES } from '../../constants/scope'
+import { HonoEnv } from '../../load-context'
+import { IUserInfo } from '../../repository/idp'
 
 const app = new Hono<HonoEnv>()
 
@@ -19,6 +22,7 @@ interface ValidResponseType {
   user_id: string
   expires_at: number
   scopes: string[]
+  user_info?: IUserInfo
 }
 
 interface InvalidResponseType {
@@ -79,13 +83,20 @@ app.post(
       return c.json<InvalidResponseType>(INVALID_REQUEST_RESPONSE, 404)
     }
 
-    return c.json<ValidResponseType>({
+    const res: ValidResponseType = {
       valid: true,
       client: tokenInfo.client,
       user_id: tokenInfo.user_id,
       expires_at: tokenInfo.access_token_expires_at.getTime(),
       scopes: tokenInfo.scopes.map(s => s.scope.name),
-    })
+    }
+
+    if (res.scopes.includes(READ_SCOPES.BASIC_INFO)) {
+      const user = await c.var.idpClient.findUserById(res.user_id)
+      if (user) res.user_info = user
+    }
+
+    return c.json<ValidResponseType>(res)
   },
 )
 
