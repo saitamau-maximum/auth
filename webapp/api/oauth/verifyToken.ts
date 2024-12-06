@@ -1,8 +1,10 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { HonoEnv } from 'load-context'
-import { IUserInfo } from 'repository/idp'
 import { z } from 'zod'
+
+import { readScope } from '../../constants/scope'
+import { HonoEnv } from '../../load-context'
+import { IUserInfo } from '../../repository/idp'
 
 const app = new Hono<HonoEnv>()
 
@@ -89,7 +91,7 @@ app.post(
       scopes: tokenInfo.scopes.map(s => s.scope.name),
     }
 
-    if (res.scopes.includes('read:basic_info')) {
+    if (res.scopes.includes(readScope.basic_info)) {
       const user = await c.var.idpClient.findUserById(res.user_id)
       if (user) res.user_info = user
     }
