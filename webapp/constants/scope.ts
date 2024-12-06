@@ -1,3 +1,3 @@
-export const readScope = {
-  basic_info: 'read:basic_info',
+export const READ_SCOPES = {
+  BASIC_INFO: 'read:basic_info',
 }
