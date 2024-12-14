@@ -39,8 +39,7 @@ interface GitHubOAuthTokenResponse {
   token_type: string
 }
 
-// いったん /cb.ts そのまま
-// TODO: たぶん userId さえ cookie に残っていれば十分そう？
+// TODO: cookieSessionStorage の userId 以外は使ってないので消す
 app.get(
   '/callback',
   zValidator('query', z.object({ code: z.string(), state: z.string() })),
