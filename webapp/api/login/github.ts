@@ -110,45 +110,11 @@ app.get(
       isMember = false
     }
 
-    session.set('id', String(user.id))
-    session.set('display_name', user.login)
-    session.set('profile_image', user.avatar_url)
-
     if (!isMember) {
-      session.set('is_member', false)
-      session.set('teams', [])
-    } else {
-      session.set('is_member', true)
-
-      // チーム数およびメンバー数が 100 以下である前提
-      // 超える場合には Pagination を用いて取得する必要がある
-      const { data: teams } = await appOctokit.request(
-        'GET /orgs/{org}/teams',
-        {
-          org: 'saitamau-maximum',
-          per_page: 100,
-        },
-      )
-      const teamsMembers = await Promise.all(
-        teams.map(async team => {
-          const { data: members } = await appOctokit.request(
-            'GET /orgs/{org}/teams/{team_slug}/members',
-            {
-              org: 'saitamau-maximum',
-              team_slug: team.slug,
-              per_page: 100,
-            },
-          )
-          return [team.name, members] as const
-        }),
-      )
-
-      session.set(
-        'teams',
-        teamsMembers
-          .filter(team => team[1].some(member => member.id === user.id))
-          .map(team => team[0]),
-      )
+      // いったん member じゃない場合はログインさせないようにする
+      // TODO: IdP が出来たらこっちも対応できるようにする
+      c.header('Set-Cookie', await commitSession(session))
+      return c.text('not a member', 403)
     }
 
     // すでになければ DB にユーザー情報を格納
