@@ -8,6 +8,7 @@ import { IdpRepository } from '../repository/idp'
 
 import cbRoute from './cb'
 import goRoute from './go'
+import loginRoute from './login'
 import oauthRoute from './oauth'
 import tokenRoute from './token'
 
@@ -32,6 +33,7 @@ app.use(async (c, next) => {
 app.route('/token', tokenRoute)
 app.route('/go', goRoute)
 app.route('/cb', cbRoute)
+app.route('/login', loginRoute)
 app.route('/oauth', oauthRoute)
 
 export default app
