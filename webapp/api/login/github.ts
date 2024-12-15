@@ -47,7 +47,7 @@ app.get(
     const { code, state } = c.req.valid('query')
 
     const { getSession, commitSession } = cookieSessionStorage(c.env)
-    const session = await getSession(c.req.header('Cookie'))
+    const session = await getSession(c.req.raw.headers.get('Cookie'))
 
     if (state !== session.get('state')) {
       c.header('Set-Cookie', await commitSession(session))
@@ -105,7 +105,7 @@ app.get(
         },
       )
       isMember = (checkIsOrgMemberRes.status as number) === 204
-    } catch (_) {
+    } catch {
       isMember = false
     }
 
