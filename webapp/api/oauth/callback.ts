@@ -4,6 +4,7 @@ import { token, tokenScope } from 'db/schema'
 import { Hono } from 'hono'
 import { HonoEnv } from 'load-context'
 import { validateAuthToken } from 'utils/auth-token.server'
+import { binaryToBase64 } from 'utils/convert-bin-base64'
 import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
 
@@ -135,13 +136,11 @@ app.post(
       })
 
     // code (240bit = 8bit * 30) を生成
-    const code = btoa(
-      String.fromCharCode(...crypto.getRandomValues(new Uint8Array(30))),
-    )
+    const code = binaryToBase64(crypto.getRandomValues(new Uint8Array(30)))
 
     // access token (312bit = 8bit * 39) を生成
-    const accessToken = btoa(
-      String.fromCharCode(...crypto.getRandomValues(new Uint8Array(39))),
+    const accessToken = binaryToBase64(
+      crypto.getRandomValues(new Uint8Array(39)),
     )
 
     // DB に格納
