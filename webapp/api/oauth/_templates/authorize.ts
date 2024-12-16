@@ -7,7 +7,10 @@ interface AuthorizeProps {
   scopes: { name: string; description: string | null }[]
   oauthFields: {
     clientId: string
-    redirectUri: string
+    // client が指定してきた redirect_uri
+    redirectUri?: string
+    // client が指定してきた redirect_uri または DB に保存されている callback
+    redirectTo: string
     state?: string
     scope?: string
     token: string
@@ -66,11 +69,13 @@ export const _Authorize = ({
       </div>
       <form method="POST" action="/oauth/callback" class="space-y-4">
         <input type="hidden" name="client_id" value="${oauthFields.clientId}" />
-        <input
-          type="hidden"
-          name="redirect_uri"
-          value="${oauthFields.redirectUri}"
-        />
+        ${oauthFields.redirectUri
+          ? html`<input
+              type="hidden"
+              name="redirect_uri"
+              value="${oauthFields.redirectUri}"
+            />`
+          : ''}
         ${oauthFields.state
           ? html`<input
               type="hidden"
@@ -106,7 +111,7 @@ export const _Authorize = ({
       </form>
     </div>
     <p class="text-sm text-gray-600 text-center">
-      ${new URL(oauthFields.redirectUri).origin} へリダイレクトします。
+      ${new URL(oauthFields.redirectTo).origin} へリダイレクトします。
       このアドレスが意図しているものか確認してください。
     </p>
   </div>
