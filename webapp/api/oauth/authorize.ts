@@ -225,7 +225,8 @@ app.get(
         })),
         oauthFields: {
           clientId,
-          redirectUri: redirectTo,
+          redirectUri,
+          redirectTo,
           state,
           scope,
           token,
