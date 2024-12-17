@@ -1,3 +1,4 @@
+import { InferSelectModel } from 'drizzle-orm'
 import { DrizzleD1Database } from 'drizzle-orm/d1'
 import { type PlatformProxy } from 'wrangler'
 
@@ -22,6 +23,12 @@ export interface HonoEnv {
   Variables: {
     dbClient: DrizzleD1Database<typeof schema>
     idpClient: IdpRepository
+    tokenInfo: InferSelectModel<typeof schema.token> & {
+      client: InferSelectModel<typeof schema.client>
+      scopes: (InferSelectModel<typeof schema.tokenScope> & {
+        scope: InferSelectModel<typeof schema.scope>
+      })[]
+    }
   }
 }
 
