@@ -4,7 +4,7 @@ import { HonoEnv } from 'load-context'
 const AUTHORIZATION_REGEX = /^Bearer (.+)$/
 
 export const authMiddleware: MiddlewareHandler<HonoEnv> = async (c, next) => {
-  const authorization = c.req.header('Authroization')
+  const authorization = c.req.header('Authorization')
   const accessToken = authorization?.match(AUTHORIZATION_REGEX)?.[1]
   if (!accessToken) {
     return c.text('Unauthorized', 401)
