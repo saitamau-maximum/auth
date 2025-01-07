@@ -1,10 +1,13 @@
 import { zValidator } from '@hono/zod-validator'
 import { createAppAuth } from '@octokit/auth-app'
 import { Hono } from 'hono'
-import { HonoEnv } from 'load-context'
 import { Octokit } from 'octokit'
-import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
+
+import { OAUTH_PROVIDER } from '../constants/oauthProviders'
+import { oauthConnection } from '../db/schema'
+import { HonoEnv } from '../load-context'
+import cookieSessionStorage from '../utils/session.server'
 
 const app = new Hono<HonoEnv>()
 
@@ -119,28 +122,33 @@ app.get(
     }
 
     // すでになければ DB にユーザー情報を格納
-    const oauthConnInfo = await c.var.idpClient.getUserIdByOauthId(
-      1,
-      String(user.id),
-    )
+    const oauthConnInfo = await c.var.dbClient.query.oauthConnection.findFirst({
+      where: (oauthConn, { eq, and }) =>
+        and(
+          eq(oauthConn.provider_id, OAUTH_PROVIDER.GITHUB),
+          eq(oauthConn.provider_user_id, String(user.id)),
+        ),
+    })
+
     if (!oauthConnInfo) {
       const uuid = crypto.randomUUID().replaceAll('-', '')
       // とりあえず仮情報で埋める
-      await c.var.idpClient.createUserWithOauth(
-        {
-          id: uuid,
-          display_name: user.login,
-          profile_image_url: user.avatar_url,
-        },
-        {
-          user_id: uuid,
-          provider_id: 1,
-          provider_user_id: String(user.id),
-          email: user.email,
-          name: user.login,
-          profile_image_url: user.avatar_url,
-        },
-      )
+      const userCreationSuccess = await c.var.idpClient.createUserWithOauth({
+        id: uuid,
+        display_name: user.login,
+        profile_image_url: user.avatar_url,
+      })
+      if (!userCreationSuccess) {
+        return c.text('failed to create user', 500)
+      }
+      await c.var.dbClient.insert(oauthConnection).values({
+        user_id: uuid,
+        provider_id: OAUTH_PROVIDER.GITHUB,
+        provider_user_id: String(user.id),
+        email: user.email,
+        name: user.login,
+        profile_image_url: user.avatar_url,
+      })
       session.set('user_id', uuid)
     } else {
       session.set('user_id', oauthConnInfo.user_id)
