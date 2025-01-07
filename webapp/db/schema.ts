@@ -147,3 +147,29 @@ export const tokenScopeRelations = relations(tokenScope, ({ one }) => ({
     references: [scope.id],
   }),
 }))
+
+// さすがに client_secret とかは環境変数側に持たせるべき(見れちゃうので)
+// → たぶん各々の OAuth ページとかを作ることになりそう
+// OAuth の接続情報に対する Reference Provider ID として使う
+export const oauthProvider = sqliteTable('oauth_provider', {
+  id: int('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+})
+
+export const oauthConnection = sqliteTable(
+  'oauth_connection',
+  {
+    userId: text('user_id').notNull(),
+    providerId: int('provider_id', { mode: 'number' })
+      .notNull()
+      .references(() => oauthProvider.id),
+    providerUserId: text('provider_user_id').notNull(), // OAuth Provider 側の User ID
+    // 以下取れそうな情報を書く
+    email: text('email'),
+    name: text('name'),
+    profileImageUrl: text('profile_image_url'),
+  },
+  table => ({
+    pk: primaryKey({ columns: [table.userId, table.providerId] }),
+  }),
+)
