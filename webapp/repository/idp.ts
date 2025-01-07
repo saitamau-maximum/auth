@@ -32,13 +32,9 @@ export class IdpRepository {
 
   async createUserWithOauth(user: IUserInfo): Promise<boolean> {
     // Cloudflare D1 での transaction はサポートされてないっぽいので Batch する (ググるといろいろ出てくる)
-    const res = await this.db.batch([
-      this.insertStmt.user.bind(
-        user.id,
-        user.display_name,
-        user.profile_image_url,
-      ),
-    ])
-    return res.every(r => r.success)
+    const res = await this.insertStmt.user
+      .bind(user.id, user.display_name, user.profile_image_url)
+      .run()
+    return res.success
   }
 }
