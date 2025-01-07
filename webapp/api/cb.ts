@@ -1,11 +1,13 @@
 import { zValidator } from '@hono/zod-validator'
 import { createAppAuth } from '@octokit/auth-app'
-import { oauthConnection } from 'db/schema'
 import { Hono } from 'hono'
-import { HonoEnv } from 'load-context'
 import { Octokit } from 'octokit'
-import cookieSessionStorage from 'utils/session.server'
 import { z } from 'zod'
+
+import { OAUTH_PROVIDER } from '../constants/oauthProviders'
+import { oauthConnection } from '../db/schema'
+import { HonoEnv } from '../load-context'
+import cookieSessionStorage from '../utils/session.server'
 
 const app = new Hono<HonoEnv>()
 
@@ -123,7 +125,7 @@ app.get(
     const oauthConnInfo = await c.var.dbClient.query.oauthConnection.findFirst({
       where: (oauthConn, { eq, and }) =>
         and(
-          eq(oauthConn.providerId, 1),
+          eq(oauthConn.providerId, OAUTH_PROVIDER.GITHUB),
           eq(oauthConn.providerUserId, String(user.id)),
         ),
     })
@@ -141,7 +143,7 @@ app.get(
       }
       await c.var.dbClient.insert(oauthConnection).values({
         userId: uuid,
-        providerId: 1,
+        providerId: OAUTH_PROVIDER.GITHUB,
         providerUserId: String(user.id),
         email: user.email,
         name: user.login,
