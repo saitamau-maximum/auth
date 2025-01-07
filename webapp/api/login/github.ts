@@ -123,8 +123,8 @@ app.get(
     const oauthConnInfo = await c.var.dbClient.query.oauthConnection.findFirst({
       where: (oauthConn, { eq, and }) =>
         and(
-          eq(oauthConn.providerId, OAUTH_PROVIDER.GITHUB),
-          eq(oauthConn.providerUserId, String(user.id)),
+          eq(oauthConn.provider_id, OAUTH_PROVIDER.GITHUB),
+          eq(oauthConn.provider_user_id, String(user.id)),
         ),
     })
 
@@ -141,16 +141,16 @@ app.get(
         return c.text('failed to create user', 500)
       }
       await c.var.dbClient.insert(oauthConnection).values({
-        userId: uuid,
-        providerId: OAUTH_PROVIDER.GITHUB,
-        providerUserId: String(user.id),
+        user_id: uuid,
+        provider_id: OAUTH_PROVIDER.GITHUB,
+        provider_user_id: String(user.id),
         email: user.email,
         name: user.login,
-        profileImageUrl: user.avatar_url,
+        profile_image_url: user.avatar_url,
       })
       session.set('user_id', uuid)
     } else {
-      session.set('user_id', oauthConnInfo.userId)
+      session.set('user_id', oauthConnInfo.user_id)
     }
 
     c.header('Set-Cookie', await commitSession(session))

@@ -159,17 +159,17 @@ export const oauthProvider = sqliteTable('oauth_provider', {
 export const oauthConnection = sqliteTable(
   'oauth_connection',
   {
-    userId: text('user_id').notNull(),
-    providerId: int('provider_id', { mode: 'number' })
+    user_id: text('user_id').notNull(),
+    provider_id: int('provider_id', { mode: 'number' })
       .notNull()
       .references(() => oauthProvider.id),
-    providerUserId: text('provider_user_id').notNull(), // OAuth Provider 側の User ID
+    provider_user_id: text('provider_user_id').notNull(), // OAuth Provider 側の User ID
     // 以下取れそうな情報を書く
     email: text('email'),
     name: text('name'),
-    profileImageUrl: text('profile_image_url'),
+    profile_image_url: text('profile_image_url'),
   },
   table => ({
-    pk: primaryKey({ columns: [table.userId, table.providerId] }),
+    pk: primaryKey({ columns: [table.user_id, table.provider_id] }),
   }),
 )
