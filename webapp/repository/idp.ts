@@ -5,17 +5,9 @@ export interface IUserInfo {
   display_name: string
   profile_image_url: string | null
 }
-export interface IOauthConnection {
-  user_id: string
-  provider_id: number
-  provider_user_id: string
-  email: string | null
-  name: string | null
-  profile_image_url: string | null
-}
 
-type ImplementedGetters = 'userById' | 'userIdByOauthId'
-type ImplementedInserters = 'user' | 'oauthConnection'
+type ImplementedGetters = 'userById'
+type ImplementedInserters = 'user'
 
 export class IdpRepository {
   private readonly db: D1Database
@@ -26,16 +18,10 @@ export class IdpRepository {
     this.db = db
     this.getStmt = {
       userById: db.prepare('SELECT * FROM user WHERE id = ?'),
-      userIdByOauthId: db.prepare(
-        'SELECT user_id FROM oauth_connection WHERE provider_id = ? AND provider_user_id = ?',
-      ),
     }
     this.insertStmt = {
       user: db.prepare(
         'INSERT INTO user (id, display_name, profile_image_url) VALUES (?, ?, ?)',
-      ),
-      oauthConnection: db.prepare(
-        'INSERT INTO oauth_connection (user_id, provider_id, provider_user_id, email, name, profile_image_url) VALUES (?, ?, ?, ?, ?, ?)',
       ),
     }
   }
@@ -44,33 +30,13 @@ export class IdpRepository {
     return await this.getStmt.userById.bind(id).first()
   }
 
-  async getUserIdByOauthId(
-    oauthProviderId: number,
-    oauthUserId: string,
-  ): Promise<{ user_id: string } | null> {
-    return await this.getStmt.userIdByOauthId
-      .bind(oauthProviderId, oauthUserId)
-      .first()
-  }
-
-  async createUserWithOauth(
-    user: IUserInfo,
-    oauthConn: IOauthConnection,
-  ): Promise<boolean> {
+  async createUserWithOauth(user: IUserInfo): Promise<boolean> {
     // Cloudflare D1 での transaction はサポートされてないっぽいので Batch する (ググるといろいろ出てくる)
     const res = await this.db.batch([
       this.insertStmt.user.bind(
         user.id,
         user.display_name,
         user.profile_image_url,
-      ),
-      this.insertStmt.oauthConnection.bind(
-        oauthConn.user_id,
-        oauthConn.provider_id,
-        oauthConn.provider_user_id,
-        oauthConn.email,
-        oauthConn.name,
-        oauthConn.profile_image_url,
       ),
     ])
     return res.every(r => r.success)
